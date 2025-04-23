@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TimeReduction extends Model
 {
@@ -14,9 +15,10 @@ class TimeReduction extends Model
     ];
 
 
-    public function time_reduction(): BelongsTo
+    public function teacher(): HasMany
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->hasMany(Teacher::class);
     }
+
 
 }

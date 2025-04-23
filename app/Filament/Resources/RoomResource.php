@@ -20,8 +20,10 @@ class RoomResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
-    protected static ?string $navigationGroup = 'Edificios';
+    protected static ?string $navigationGroup = 'Definições Horário';
     protected static ?string $navigationLabel = 'Salas';
+    protected static ?int $navigationSort = 6;
+
     public static function getModelLabel(): string
     {
         return __('filament/resources.rooms.single');
@@ -41,7 +43,7 @@ class RoomResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('building_id')
-                    ->label(__('filament/resources.rooms.fields.building'))
+                    ->label('Polos e Núcleos')
                     ->relationship('building', 'name')
                     ->required()
                     ->searchable()
@@ -56,6 +58,7 @@ class RoomResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('building.name')
+                    ->label('Polos e Núcleos')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')

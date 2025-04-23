@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Teacher extends Model
 {
@@ -14,58 +15,77 @@ class Teacher extends Model
         'acronym',
         'birthdate',
         'startingdate',
+        'id_nationality',
+        'id_user',
+        'id_gender',
+        'id_qualifications',
+        'id_department',
+        'id_professionalrelationship',
+        'id_contractualrelationship',
+        'id_salaryscale',
 
     ];
 
     // relacão de um para um
 
-    public function teacher_nationality(): HasOne
+    public function nationalities()
     {
-        return $this->hasOne(Nationality::class);
+        return $this->belongsTo(Nationality::class, 'id_nationality');
     }
 
-    public function teacher_user(): HasOne
+    public function users()
     {
-        return $this->hasOne(User::class);
-    }
-
-    public function teacher_gender(): HasOne
-    {
-        return $this->hasOne(Gender::class);
-    }
-
-    public function teacher_qualification(): HasOne
-    {
-        return $this->hasOne(Qualification::class);
-    }
-    public function teacher_department(): HasOne
-    {
-        return $this->hasOne(Department::class);
-    }
-    public function teacher_professionalrelationship(): HasOne
-    {
-        return $this->hasOne(Professional_Relationship::class);
-    }
-    public function teacher_contractualrelationship(): HasOne
-    {
-        return $this->hasOne(Contractual_Relationship::class);
-    }
-    public function teacher_salaryscale(): HasOne
-    {
-        return $this->hasOne(Salary_Scale::class);
+        return $this->belongsTo(User::class, 'id_user');
     }
 
 
-    // relacão de muitos para muitos
-    public function teacher_position(): HasMany
+    public function genders()
     {
-        return $this->hasMany(Position::class);
+        return $this->belongsTo(Gender::class, 'id_gender');
     }
 
-    public function teacher_time_reduction(): HasMany
+    public function qualifications()
     {
-        return $this->hasMany(Time_Reduction::class);
+        return $this->belongsTo(Qualification::class, 'id_qualifications');
     }
+
+    public function departments()
+    {
+        return $this->belongsTo(Department::class, 'id_department');
+    }
+
+    public function professionalrelationships()
+    {
+        return $this->belongsTo(ProfessionalRelationship::class, 'id_professionalrelationship');
+    }
+
+    public function contractualrelationship()
+    {
+        return $this->belongsTo(ContractualRelationship::class, 'id_contractualrelationship');
+    }
+
+    public function salaryscales()
+    {
+        return $this->belongsTo(SalaryScale::class, 'id_salaryscale');
+    }
+
+    public function subjects(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+
+
+    // // relacão de muitos para muitos
+    // public function teacher_position(): HasMany
+    // {
+    //     return $this->hasMany(Position::class);
+    // }
+
+    // public function teacher_time_reduction(): HasMany
+    // {
+    //     return $this->hasMany(TimeReduction::class);
+    // }
 
 
 }

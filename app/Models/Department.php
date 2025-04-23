@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Department extends Model
 {
@@ -12,10 +14,11 @@ class Department extends Model
        'department_description',
     ];
 
-    public function department(): BelongsTo
+    public function teacher(): HasMany
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->hasMany(Teacher::class);
     }
+
 
 
 }

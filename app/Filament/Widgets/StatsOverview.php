@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Building;
+use App\Models\Classes;
+use App\Models\Course;
 use App\Models\Department;
 use App\Models\Docente;
 use App\Models\Room;
@@ -42,6 +44,15 @@ class StatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-user-group')
                 ->color('success'),
 
+            Stat::make('Numero de Cursos', Course::count())
+                ->description('Número total de Cursos')
+                ->descriptionIcon('heroicon-m-academic-cap')
+                ->color('success'),
+
+            Stat::make('Numero de Turmas', Classes::count())
+                ->description('Número total de Turmas')
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color('success'),
 
         ];
     }

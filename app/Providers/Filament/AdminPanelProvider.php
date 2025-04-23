@@ -20,6 +20,8 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\BuildingsOverview;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Pages\Dashboard;
+use Filament\SpatieLaravelPermissionPlugin\SpatieLaravelPermissionPlugin;
+
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -52,6 +54,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+        //    ->plugins([
+        //        SpatieLaravelPermissionPlugin::make(),
+        //    ]);
+;
     }
 }

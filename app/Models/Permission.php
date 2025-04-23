@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Permission extends Model
 {
     protected $fillable = [
-        'permission',
+        'name',
+        'guard_name',
     ];
 
 //     public function role(): BelongsTo

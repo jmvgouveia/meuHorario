@@ -25,7 +25,11 @@ class BuildingResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
-    protected static ?string $navigationGroup = 'Edificios';
+    protected static ?string $navigationGroup = 'Definições Horário';
+    protected static ?string $navigationLabel = 'Polos e Núcleos';
+    protected static ?int $navigationSort = 5;
+
+
 
     public static function getModelLabel(): string
     {

@@ -12,6 +12,7 @@
         "laravel/tinker": "^2.10.1",
         "pxlrbt/filament-excel": "^2.4",
         "spatie/laravel-permission": "^6.16"
+
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -70,6 +71,13 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "stable",
-    "prefer-stable": true
+
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+
+    "repositories": [
+    {
+        "type": "vcs",
+        "url": "https://github.com/filamentphp/spatie-laravel-permission-plugin"
+    }]
 }

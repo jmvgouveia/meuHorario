@@ -11,10 +11,5 @@ class ContractualRelationship extends Model
        'contractual_relationship',
     ];
 
-    public function contractual_relationship(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class);
-    }
-
 
 }

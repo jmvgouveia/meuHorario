@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Position extends Model
 {
@@ -11,9 +13,14 @@ class Position extends Model
        'position',
     ];
 
-    public function position(): BelongsTo
+    // public function position(): BelongsTo
+    // {
+    //     return $this->belongsTo(Teacher::class);
+    // }
+
+    public function teacher(): HasMany
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->hasMany(Teacher::class);
     }
 
 

@@ -49,11 +49,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function user_role() : HasMany
+    // public function user_role() : HasMany
+    // {
+    //     return $this->hasMany(Role::class);
+    // }
+
+    public function teacher(): HasMany
     {
-        return $this->hasMany(Role::class);
+        return $this->hasMany(Teacher::class);
     }
-
-
 
 }

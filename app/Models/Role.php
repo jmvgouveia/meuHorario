@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Role extends Model
 {
     protected $fillable = [
-        'role',
+        'name',
+        'guard_name',
     ];
 
     // Relação muitos para muitos com Permissions

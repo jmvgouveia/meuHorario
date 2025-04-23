@@ -25,6 +25,8 @@ class PositionResource extends Resource
     protected static ?string $navigationGroup = 'Definições Professor';
     protected static ?string $navigationLabel = 'Cargo';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 12;
+
 
     public static function form(Form $form): Form
     {

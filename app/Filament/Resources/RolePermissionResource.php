@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log; // Certifique-se de importar o Log
 class RolePermissionResource extends Resource
 {
     protected static ?string $model = Role::class;
+    protected static bool $shouldRegisterNavigation = false;      // ESCONDER NO MENU
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Administração';

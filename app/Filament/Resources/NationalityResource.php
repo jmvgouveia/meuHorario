@@ -19,9 +19,12 @@ use Filament\Tables\Columns\TextColumn;
 class NationalityResource extends Resource
 {
     protected static ?string $model = Nationality::class;
-    protected static ?string $navigationGroup = 'Administração';
+    protected static ?string $navigationGroup = 'Definições Professor';
     protected static ?string $navigationLabel = 'Nacionalidade';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 10;
+
+
 
     public static function form(Form $form): Form
     {

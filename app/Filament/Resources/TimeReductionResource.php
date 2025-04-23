@@ -21,6 +21,8 @@ class TimeReductionResource extends Resource
     protected static ?string $model = TimeReduction::class;
     protected static ?string $navigationGroup = 'Definições Professor';
     protected static ?string $navigationLabel = 'Redução de Horário';
+    protected static ?int $navigationSort = 17;
+
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

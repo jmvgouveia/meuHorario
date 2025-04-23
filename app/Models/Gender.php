@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Gender extends Model
 {
@@ -11,14 +12,9 @@ class Gender extends Model
        'gender',
     ];
 
-    public function teacher_gender(): BelongsTo
+    public function teacher(): HasMany
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->hasMany(Teacher::class);
     }
-
-    // public function teacher_gender(): BelongsTo
-    // {
-    //     return $this->belongsTo(Student::class);
-    // }
 
 }

@@ -12,54 +12,43 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 
 class PermissionResource extends Resource
-{
+{    protected static bool $shouldRegisterNavigation = false;      // ESCONDER NO MENU
+
     protected static ?string $model = Permission::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Administração';
-    protected static ?string $navigationLabel = 'Permissões';
+    protected static ?string $navigationGroup = 'Admin';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('permission')
-                    ->label('Nome da Permissão')
-                    ->required()
-                    ->maxLength(255)
-                    ->placeholder('Nome da Permissão')
-                    ->helperText('Informe o nome da permissão'),
+                TextInput::make('name')
+                ->label('Permission Name')
+                ->required()
+                ->maxLength(255),
+            TextInput::make('guard_name')
+                ->label('Guard Name')
+                ->required()
+                ->maxLength(255)
+                ->placeholder('web')
+                ->helperText('Informe o nome do guard'),
+        ]);
 
-            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('permission')
-                    ->label('Nome da Permissão')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('created_at')
-                    ->label('Criado em')
-                    ->dateTime()
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('updated_at')
-                    ->label('Atualizado em')
-                    ->dateTime()
-                    ->sortable()
-                    ->searchable(),
+                TextColumn::make('id')->label('ID')->sortable()->searchable(),
+                TextColumn::make('name')->label('Role Name')->searchable(),
+                TextColumn::make('guard_name')->label('Guard Name')->searchable(),
             ])
             ->filters([
                 //

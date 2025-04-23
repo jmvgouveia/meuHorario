@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class ProfessionalRelationship extends Model
 {
@@ -11,10 +13,11 @@ class ProfessionalRelationship extends Model
        'professional_relationship',
     ];
 
-    public function position(): BelongsTo
+    public function teacher(): HasMany
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->hasMany(Teacher::class);
     }
+
 
 
 }

@@ -23,6 +23,8 @@ class ProfessionalRelationshipResource extends Resource
     protected static ?string $navigationGroup = 'Definições Professor';
     protected static ?string $navigationLabel = 'Relação Profissional';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 15;
+
 
     public static function form(Form $form): Form
     {

@@ -15,10 +15,13 @@ use Filament\Actions\ImportAction;
 class TimePeriodResource extends Resource
 {
     protected static ?string $model = TimePeriod::class;
+    protected static ?string $navigationGroup = 'Definições Horário';
+
+    protected static ?string $navigationLabel = 'Horas de Aula';
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
-    protected static ?string $navigationGroup = 'Definições Horários';
 
     public static function getModelLabel(): string
     {

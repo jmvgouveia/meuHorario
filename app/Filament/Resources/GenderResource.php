@@ -19,9 +19,11 @@ use Filament\Tables\Columns\TextColumn;
 class GenderResource extends Resource
 {
     protected static ?string $model = Gender::class;
-    protected static ?string $navigationGroup = 'Administração';
+    protected static ?string $navigationGroup = 'Definições Professor';
     protected static ?string $navigationLabel = 'Género';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort = 8;
+
 
     public static function form(Form $form): Form
     {

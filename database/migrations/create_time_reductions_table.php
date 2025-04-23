@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contratual_relationships');
+        Schema::dropIfExists('time_reductions');
 
     }
 };

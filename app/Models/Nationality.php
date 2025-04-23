@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Nationality extends Model
 {
@@ -11,14 +12,11 @@ class Nationality extends Model
        'nationality',
     ];
 
-    public function teacher_gender(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class);
-    }
+  public function teacher(): HasMany
+  {
+      return $this->hasMany(Teacher::class);
+  }
 
-    // public function teacher_gender(): BelongsTo
-    // {
-    //     return $this->belongsTo(Student::class);
-    // }
+
 
 }
