@@ -8,6 +8,7 @@ use App\Models\Gender;
 use App\Models\Nationality;
 use App\Models\Teacher;
 use Dom\Text;
+use Faker\Core\File;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
@@ -20,6 +21,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Group;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\FileUpload;
 
 class TeacherResource extends Resource
 {
@@ -40,26 +43,26 @@ class TeacherResource extends Resource
                     ->schema([
 
                         TextInput::make('teachernumber')
-                    ->label('Numero de Professor')
-                    ->required()
-                    ->numeric()
-                    ->placeholder('Exempo: 123456'),
+                            ->label('Numero de Professor')
+                            ->required()
+                            ->numeric()
+                            ->placeholder('Exempo: 123456'),
 
                         TextInput::make('acronym')
-                        ->label('Sigla')
-                        ->required()
-                        ->maxLength(255)
-                        ->placeholder('Introduza a sigla'),
+                            ->label('Sigla')
+                            ->required()
+                            ->maxLength(255)
+                            ->placeholder('Introduza a sigla'),
 
                         DatePicker::make('birthdate')
-                        ->label('Data de Nascimento')
-                        ->required()
-                        ->placeholder('Selecione a data de nascimento'),
+                            ->label('Data de Nascimento')
+                            ->required()
+                            ->placeholder('Selecione a data de nascimento'),
 
-                    DatePicker::make('startingdate')
-                        ->label('Data de inicio de função')
-                        ->required()
-                        ->placeholder('Selecione a data de de inicio de função'),
+                        DatePicker::make('startingdate')
+                            ->label('Data de inicio de função')
+                            ->required()
+                            ->placeholder('Selecione a data de de inicio de função'),
 
                     ])->columns(4),
 
@@ -72,67 +75,83 @@ class TeacherResource extends Resource
                     ->columnSpanFull(),
 
 
+                TextInput::make('user.email')
+                    ->label('Email')
+                    ->required()
+                    ->email()
+                    ->columnSpanFull(),
+
+                TextInput::make('user.password')
+                    ->label('Senha')
+                    ->password()
+                    ->minLength(8)
+                    ->nullable()
+                    ->placeholder('Deixe em branco para manter a atual')
+                    ->columnSpanFull(),
+
                 group::make()
 
                     ->schema([
 
-                        TextInput::make('id_user')
-                        ->label('id do utilizador')
-                        ->required()
-                        ->default('1')
-                        ->numeric(),
-
-                    Select::make('id_gender')
-                        //->options(Gender::all()->pluck('gender','id'))
-                        ->relationship('genders', 'gender')
-                        ->label('Gênero')
-                        ->required()
-                        ->placeholder('Selecione o gênero'),
-
-                    Select::make('id_nationality')
-                        //->options(Nationality::all()->pluck('nationality','id'))
-                       ->relationship('nationalities', 'nationality')
-                        ->label('Nacionalidade')
-                        ->required()
-                        ->placeholder('Selecione o Nacionalidade'),
-
-                    Select::make('id_qualifications')
-                        //->options(Nationality::all()->pluck('nationality','id'))
-                       ->relationship('qualifications', 'qualification')
-                        ->label('Habilitações')
-                        ->required()
-                        ->placeholder('Selecione a Habilitação'),
-
-                    Select::make('id_department')
-                    ->relationship('departments', 'department')
-                    ->label('Departamento')
-                    ->required()
-                    ->placeholder('Selecione a departamento'),
-
-                    Select::make('id_professionalrelationship')
-                        ->relationship('professionalrelationships', 'professional_relationship')
-                        ->label('Relação Profissional')
-                        ->required()
-                        ->placeholder('Selecione a Relação Profissional'),
-
-                    Select::make('id_contractualrelationship')
-                        ->relationship('contractualrelationship', 'contractual_relationship')
-                        ->label('Relação Contratual')
-                        ->required()
-                        ->placeholder('Selecione a Relação Contratual'),
-
-                    Select::make('id_salaryscale')
-                        ->relationship('salaryscales', 'scale')
-                        ->label('Escalão Salarial')
-                        ->required()
-                        ->placeholder('Selecione a Escalão Salarial'),
 
 
+                        Select::make('id_gender')
+                            //->options(Gender::all()->pluck('gender','id'))
+                            ->relationship('genders', 'gender')
+                            ->label('Gênero')
+                            ->required()
+                            ->placeholder('Selecione o gênero'),
+
+                        Select::make('id_nationality')
+                            //->options(Nationality::all()->pluck('nationality','id'))
+                            ->relationship('nationalities', 'nationality')
+                            ->label('Nacionalidade')
+                            ->required()
+                            ->placeholder('Selecione o Nacionalidade'),
+
+                        Select::make('id_qualifications')
+                            //->options(Nationality::all()->pluck('nationality','id'))
+                            ->relationship('qualifications', 'qualification')
+                            ->label('Habilitações')
+                            ->required()
+                            ->placeholder('Selecione a Habilitação'),
+
+                        Select::make('id_department')
+                            ->relationship('departments', 'department')
+                            ->label('Departamento')
+                            ->required()
+                            ->placeholder('Selecione a departamento'),
+
+                        Select::make('id_professionalrelationship')
+                            ->relationship('professionalrelationships', 'professional_relationship')
+                            ->label('Relação Profissional')
+                            ->required()
+                            ->placeholder('Selecione a Relação Profissional'),
+
+                        Select::make('id_contractualrelationship')
+                            ->relationship('contractualrelationship', 'contractual_relationship')
+                            ->label('Relação Contratual')
+                            ->required()
+                            ->placeholder('Selecione a Relação Contratual'),
+
+                        Select::make('id_salaryscale')
+                            ->relationship('salaryscales', 'scale')
+                            ->label('Escalão Salarial')
+                            ->required()
+                            ->placeholder('Selecione a Escalão Salarial'),
 
                     ])->columns(2),
 
 
-
+                // Section::make('Disciplinas do Professor')->schema([
+                //     Select::make('subject')
+                //         ->label('Disciplina(s)')
+                //         ->multiple()
+                //         ->relationship('subject', 'subject')
+                //         ->preload()
+                //         ->searchable()
+                //         ->placeholder('Selecione a(s) disciplina(s) que o professor lecciona')
+                // ]),
 
 
 
@@ -180,7 +199,7 @@ class TeacherResource extends Resource
     public static function getRelations(): array
     {
         return [
-          //  GenderResource\RelationManagers\TeachersRelationManager::class,
+            //  GenderResource\RelationManagers\TeachersRelationManager::class,
 
         ];
     }

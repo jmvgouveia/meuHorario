@@ -45,18 +45,14 @@ class TimeReductionResource extends Resource
                     ->maxLength(255)
                     ->placeholder('1 hora')
                     ->helperText('Informe o valor da redução em horas'),
-                ]);
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
+
                 TextColumn::make('time_reduction')
                     ->label('Redução de Horário')
                     ->sortable()

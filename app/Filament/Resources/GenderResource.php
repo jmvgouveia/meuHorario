@@ -30,9 +30,9 @@ class GenderResource extends Resource
         return $form
             ->schema([
                 TextInput::make('gender')
-                ->required()
-                ->label('Genero')
-                ->maxLength(255),
+                    ->required()
+                    ->label('Genero')
+                    ->maxLength(255),
             ]);
     }
 
@@ -40,10 +40,7 @@ class GenderResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable()
-                    ->sortable(),
+
                 TextColumn::make('gender')
                     ->label('Genero')
                     ->searchable()

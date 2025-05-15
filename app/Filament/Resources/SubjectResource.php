@@ -15,8 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use App\Filament\Imports\SubjectImporter;
-
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\Select;
 
 class SubjectResource extends Resource
 {
@@ -28,11 +29,12 @@ class SubjectResource extends Resource
     protected static ?string $navigationLabel = 'Disciplinas';
     protected static ?int $navigationSort = 4;
 
-
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Section::make('Dados Gerais')
+                    ->description('Dados gerais da disciplina'),
                 TextInput::make('subject')
                     ->label('Disciplina')
                     ->required()
@@ -45,6 +47,16 @@ class SubjectResource extends Resource
                     ->maxLength(255)
                     ->placeholder('Descrição')
                     ->helperText('Informe a descrição'),
+                // Section::make('Professor(s)')->schema([
+                //     Select::make('teachers')
+                //         ->label('Professor(es)')
+                //         ->multiple()
+                //         ->relationship('teachers', 'name')
+                //         ->preload()
+                //         ->searchable()
+                //         ->placeholder('Selecione o(s) professor(es)')
+                //         ->helperText('Selecione o(s) professor(es) que leccionam a disciplina')
+                // ])
             ]);
     }
 
@@ -52,10 +64,6 @@ class SubjectResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('subject')
                     ->label('Disciplina')
                     ->sortable()
@@ -64,6 +72,11 @@ class SubjectResource extends Resource
                     ->label('Sigla')
                     ->sortable()
                     ->searchable(),
+                // TextColumn::make('teachers_count')
+                //     ->label('Número de Professores')
+                //     ->counts('teachers')  // Conta o número de professores relacionados
+                //     ->sortable(),
+
             ])
             ->filters([
                 //
@@ -74,7 +87,7 @@ class SubjectResource extends Resource
             ->headerActions([
                 Tables\Actions\ImportAction::make()
                     ->importer(SubjectImporter::class),
-                Tables\Actions\CreateAction::make()
+                // Tables\Actions\CreateAction::make()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -86,7 +99,7 @@ class SubjectResource extends Resource
     public static function getRelations(): array
     {
         return [
-            SubjectResource\RelationManagers\TeachersRelationManager::class,
+            // SubjectResource\RelationManagers\TeachersRelationManager::class,
         ];
     }
 

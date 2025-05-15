@@ -10,27 +10,31 @@ class Classes extends Model
 {
     protected $fillable = [
         'class',
-        'App\Models\Course',
+        'id_course',
 
 
     ];
 
 
 
-    public function courses(): HasMany
+    // public function courses(): HasMany
+    // {
+    //     return $this->hasMany(Course::class);
+    // }
+
+
+    public function course()
     {
-        return $this->hasMany(Course::class);
+        return $this->belongsTo(Course::class, 'id_course'); // 'course_id' é a chave estrangeira na tabela de classes
     }
 
-
-    public function course(): BelongsTo
+    public function classes()
     {
-        return $this->belongsTo(Course::class , 'App\Models\Course');
+        return $this->belongsToMany(
+            \App\Models\Classes::class,
+            'schedule_class',      // nome da tabela pivot
+            'schedule_id',
+            'class_id'
+        );
     }
-
-
-
-
-
-
 }

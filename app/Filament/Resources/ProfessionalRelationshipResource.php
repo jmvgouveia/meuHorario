@@ -44,11 +44,7 @@ class ProfessionalRelationshipResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
+
                 TextColumn::make('professional_relationship')
                     ->label('Relação Profissional')
                     ->sortable()

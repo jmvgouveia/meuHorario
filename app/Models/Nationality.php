@@ -9,14 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Nationality extends Model
 {
     protected $fillable = [
-       'nationality',
+        'nationality',
+        'acronym',
     ];
 
-  public function teacher(): HasMany
-  {
-      return $this->hasMany(Teacher::class);
-  }
-
-
-
+    public function teacher(): HasMany
+    {
+        return $this->hasMany(Teacher::class);
+    }
 }

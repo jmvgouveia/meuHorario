@@ -16,13 +16,20 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+
 
 class CoursesResource extends Resource
 {
     protected static ?string $model = Course::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Definições Horário';
+
     protected static ?string $navigationLabel = 'Cursos';
+    protected static ?int $navigationSort = 4;
+
 
     public static function form(Form $form): Form
     {
@@ -34,7 +41,9 @@ class CoursesResource extends Resource
                     ->maxLength(255)
                     ->placeholder('Nome do Curso')
                     ->helperText('Informe o nome do curso'),
-                //
+
+
+
             ]);
     }
 
@@ -42,14 +51,15 @@ class CoursesResource extends Resource
     {
         return $table
             ->columns([
-                textColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable(),
+
                 TextColumn::make('course')
                     ->label('Nome do Curso')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('classes_count')
+                    ->label('Número de Turmas')
+                    ->counts('classes') // Conta o número de professores relacionados
+                    ->sortable(),
             ])
             ->filters([
                 //

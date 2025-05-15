@@ -20,21 +20,21 @@ class QualificationResource extends Resource
 {
     protected static ?string $model = Qualification::class;
     protected static ?string $navigationGroup = 'Definições Professor';
-    protected static ?string $navigationLabel = 'Qualificação';
+    protected static ?string $navigationLabel = 'Habilitações';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 11;
+
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 TextInput::make('qualification')
-                    ->label('Qualificação')
+                    ->label('Habilitação')
                     ->required()
                     ->maxLength(255)
                     ->required()
-                    ->placeholder('Qualificação')
-                    ->helperText('Informe a qualificação'),
+                    ->placeholder('Habilitação'),
                 //
             ]);
     }
@@ -43,13 +43,9 @@ class QualificationResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
+
                 TextColumn::make('qualification')
-                    ->label('Qualificação')
+                    ->label('Habilitação')
                     ->sortable()
                     ->searchable()
                     ->toggleable(),

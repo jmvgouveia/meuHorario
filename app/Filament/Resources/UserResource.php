@@ -33,22 +33,19 @@ class UserResource extends Resource
                     ->label('Nome')
                     ->required()
                     ->maxLength(255)
-                    ->placeholder('Nome completo')
-                    ->helperText('Informe o nome completo do usuário'),
+                    ->placeholder('Preencha com o nome completo'),
                 TextInput::make('email')
                     ->label('Email')
                     ->required()
                     ->maxLength(255)
-                    ->placeholder('Email')
-                    ->helperText('Informe o email do usuário'),
+                    ->placeholder('Preencha com o endereco de email'),
                 TextInput::make('password')
                     ->label('Senha')
                     ->required()
                     ->maxLength(255)
-                    ->placeholder('Senha')
-                    ->helperText('Informe a senha do usuário')
+                    ->placeholder('Introduza a senha')
                     ->password()
-                    ->dehydrated(fn ($state) => filled($state)),
+                    ->dehydrated(fn($state) => filled($state)),
 
 
             ]);

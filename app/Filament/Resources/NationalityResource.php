@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\NationalityImporter;
 use App\Filament\Resources\NationalityResource\Pages;
 use App\Filament\Resources\NationalityResource\RelationManagers;
 use App\Models\Nationality;
+use Dom\Text;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -31,12 +33,19 @@ class NationalityResource extends Resource
         return $form
             ->schema([
                 textInput::make('nationality')
-                ->label('Nacionalidade')
-                ->required()
-                ->maxLength(255)
-                ->required()
-                ->placeholder('Nacionalidade')
-                ->helperText('Introduza a nacioalidade'),
+                    ->label('Nacionalidade')
+                    ->required()
+                    ->maxLength(255)
+                    ->required()
+                    ->placeholder('Nacionalidade')
+                    ->helperText('Introduza a nacioalidade'),
+
+                textInput::make('acronym')
+                    ->label('Sigla')
+                    ->required()
+                    ->maxLength(255)
+                    ->placeholder('Sigla')
+                    ->helperText('Introduza a sigla'),
             ]);
     }
 
@@ -44,19 +53,26 @@ class NationalityResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                ->label('ID')
-                ->searchable()
-                ->sortable(),
-            TextColumn::make('nationality')
-                ->label('Nacionalidade')
-                ->sortable(),
+
+                TextColumn::make('nationality')
+                    ->label('Nacionalidade')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('acronym')
+                    ->label('Sigla')
+                    ->toggleable()
+                    ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])
+            ->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(NationalityImporter::class),
+                //Tables\Actions\CreateAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -11,9 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('weekdays', function (Blueprint $table) {
+        Schema::create('schedules_students', function (Blueprint $table) {
             $table->id();
-            $table->string('weekday');
+
+            $table->foreignId('id_student')
+                ->constrained('students')
+                ->onDelete('cascade');
+            $table->foreignId('id_schedule')
+                ->constrained('schedules')
+                ->onDelete('cascade');
+
             $table->timestamps();
         });
     }
@@ -23,7 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('weekdays');
-
+        Schema::dropIfExists('schedules_students');
     }
 };

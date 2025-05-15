@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\ClassesImporter;
 use App\Filament\Resources\ClassesResource\Pages;
 use App\Filament\Resources\ClassesResource\RelationManagers;
 use App\Models\Classes;
@@ -24,7 +25,11 @@ class ClassesResource extends Resource
     protected static ?string $model = Classes::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Definições Horário';
+
     protected static ?string $navigationLabel = 'Turmas';
+    protected static ?int $navigationSort = 4;
+
 
     public static function form(Form $form): Form
     {
@@ -36,9 +41,10 @@ class ClassesResource extends Resource
                     ->maxLength(255)
                     ->placeholder('Introduza o nome da Turma'),
 
-                Select::make('App\Models\Course')
+                Select::make('id_course')
                     ->label('Curso')
-                    ->relationship('courses', 'course')
+                    ->relationship('course', 'course')
+                    ->placeholder('Escolha o curso')
                     ->required(),
 
             ]);
@@ -48,10 +54,7 @@ class ClassesResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable()
-                    ->sortable(),
+
                 TextColumn::make('class')
                     ->label('Nome da Turma')
                     ->searchable()
@@ -67,6 +70,27 @@ class ClassesResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])
+
+            ->headerActions([
+
+                Tables\Actions\ImportAction::make()
+                    ->importer(ClassesImporter::class)
+                    ->label('Importar Turmas')
+                    ->icon('heroicon-o-arrow-up-tray')
+                //  ->color('success')
+                // ->action('importer')
+
+
+
+
+                // Tables\Actions\ImportAction::make()
+                //     ->label('Importar Turmas')
+                //     ->icon('heroicon-o-arrow-up-tray')
+                //     ->color('success')
+                //     ->action('importer')
+                //     ->importer(ClassesImporter::class),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

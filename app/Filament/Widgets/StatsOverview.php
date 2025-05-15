@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Department;
 use App\Models\Docente;
 use App\Models\Room;
+use App\Models\Student;
 use App\Models\Teacher;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -38,6 +39,12 @@ class StatsOverview extends BaseWidget
                 ->description('Número total de docentes')
                 ->descriptionIcon('heroicon-m-user-group')
                 ->color('danger'),
+
+
+            Stat::make('Numero de Alunos', Student::count())
+                ->description('Número total de Alunos')
+                ->descriptionIcon('heroicon-m-user-group')
+                ->color('warning'),
 
             Stat::make('Numero de Deparmentos', Department::count())
                 ->description('Número total de Departamentos')

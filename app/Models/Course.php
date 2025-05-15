@@ -15,7 +15,15 @@ class Course extends Model
 
     public function classes()
     {
-        return $this->belongsTo(Classes::class, 'id_course');
+        return $this->hasMany(Classes::class, 'id_course'); // 'course_id' é a chave estrangeira na tabela de classes
     }
 
+    public function registrarion(): HasMany
+    {
+        return $this->hasMany(Registration::class);
+    }
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class, 'id_course');
+    }
 }

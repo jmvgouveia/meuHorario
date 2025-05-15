@@ -16,13 +16,13 @@ class Teacher extends Model
         'birthdate',
         'startingdate',
         'id_nationality',
-        'id_user',
         'id_gender',
         'id_qualifications',
         'id_department',
         'id_professionalrelationship',
         'id_contractualrelationship',
         'id_salaryscale',
+        'id_user',
 
     ];
 
@@ -33,11 +33,16 @@ class Teacher extends Model
         return $this->belongsTo(Nationality::class, 'id_nationality');
     }
 
-    public function users()
+    // public function users()
+    // {
+    //     return $this->belongsTo(User::class, 'id_user');
+    // }
+
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
     }
-
 
     public function genders()
     {
@@ -69,9 +74,15 @@ class Teacher extends Model
         return $this->belongsTo(SalaryScale::class, 'id_salaryscale');
     }
 
-    public function subjects(): BelongsTo
+    public function subject()
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsToMany(Subject::class, 'teacher_subject')->withTimestamps();
+    }
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'teacher_subjects', 'id_teacher', 'id_subject')
+            ->withPivot('id_schoolyear');
     }
 
 

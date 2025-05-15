@@ -43,10 +43,7 @@ class DepartmentResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable(),
+
                 TextColumn::make('department')
                     ->label('Nome do Departamento')
                     ->sortable()

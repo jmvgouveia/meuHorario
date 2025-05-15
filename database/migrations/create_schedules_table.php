@@ -17,11 +17,16 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
-            $table->foreignId(SchoolYears::class);
-            $table->foreignId(TimePeriod::class);
-            $table->foreignId(Teacher::class);
-            
-            $table->foreignId(Room::class);
+            $table->foreignId('id_schoolyear')->constrained('schoolyears')->onDelete('cascade');
+            $table->foreignId('id_timeperiod')->constrained('timeperiod')->onDelete('cascade');
+            $table->foreignId('id_room')->constrained('room')->onDelete('cascade');
+            $table->foreignId('id_teacher')->constrained('teacher')->onDelete('cascade');
+            $table->foreignId('id_weekday')->constrained('weekday')->onDelete('cascade');
+
+            // $table->foreignId(TimePeriod::class);
+            // $table->foreignId(Teacher::class);
+
+            // $table->foreignId(Room::class);
             $table->timestamps();
         });
     }
@@ -32,6 +37,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('schedules');
-
     }
 };

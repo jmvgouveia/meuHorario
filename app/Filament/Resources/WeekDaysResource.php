@@ -44,10 +44,7 @@ class WeekDaysResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable()
-                    ->sortable(),
+
                 TextColumn::make('weekday')
                     ->label('Dia da semana')
                     ->sortable()

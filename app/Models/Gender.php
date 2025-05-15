@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Gender extends Model
 {
     protected $fillable = [
-       'gender',
+        'gender',
     ];
 
     public function teacher(): HasMany
@@ -17,4 +17,8 @@ class Gender extends Model
         return $this->hasMany(Teacher::class);
     }
 
+    public function student(): HasMany
+    {
+        return $this->hasMany(Student::class);
+    }
 }

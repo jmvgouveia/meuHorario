@@ -40,11 +40,7 @@ class SalaryScaleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
+
                 TextColumn::make('scale')
                     ->label('Escalão Salarial')
                     ->sortable()

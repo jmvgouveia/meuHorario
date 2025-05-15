@@ -49,8 +49,7 @@ class TimePeriodResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('description')
                     ->label(__('filament/resources.time_periods.fields.description'))
                     ->searchable(),

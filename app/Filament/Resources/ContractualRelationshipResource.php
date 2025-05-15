@@ -45,11 +45,7 @@ class ContractualRelationshipResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->searchable()
-                    ->toggleable(),
+
                 TextColumn::make('contractual_relationship')
                     ->label('Relação Contratual')
                     ->sortable()

@@ -18,7 +18,7 @@ class ClassesImporter extends Importer
     {
         return [
             ImportColumn::make('class')
-                ->label('Curso')
+                ->label('Nome da Turma')
                 ->rules(['required', 'string', 'max:255']),
             ImportColumn::make('id_course')
                 ->label('ID do Curso')
@@ -41,7 +41,8 @@ class ClassesImporter extends Importer
             }
 
             $record->fill([
-                'course' => $data['course'],
+                'class' => $data['class'],
+                'id_course' => $data['id_course'],
             ]);
 
             $record->save();
@@ -59,6 +60,6 @@ class ClassesImporter extends Importer
     public static function getCompletedNotificationBody(Import $import): string
     {
         $count = $import->successful_rows;
-        return "Importados com sucesso {$count} Cursos.";
+        return "{$count}  Trumas importadas com sucesso.";
     }
 }
