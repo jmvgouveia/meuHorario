@@ -24,7 +24,7 @@ class ClassesResource extends Resource
 {
     protected static ?string $model = Classes::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationGroup = 'Definições Horário';
 
     protected static ?string $navigationLabel = 'Turmas';
