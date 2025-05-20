@@ -11,30 +11,46 @@ use Filament\Tables;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BooleanColumn;
+use Spatie\Permission\Models\Permission;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\CheckboxList;
+
 
 class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
 
-    protected static bool $shouldRegisterNavigation = false;      // ESCONDER NO MENU
+    //protected static bool $shouldRegisterNavigation = false;      // ESCONDER NO MENU
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-    protected static ?string $navigationGroup = 'Admin';
+    protected static ?string $navigationGroup = 'Administração';
+    protected static ?string $navigationLabel = 'Perfis';
 
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([
-                TextInput::make('name')
+                TextInput::make('role')
                     ->label('Role Name')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('guard_name')
-                    ->label('Guard Name')
-                    ->required()
-                    ->maxLength(255)
-                    ->placeholder('web')
-                    ->helperText('Informe o nome do guard'),
+                // TextInput::make('guard_name')
+                //     ->label('Guard Name')
+                //     ->required()
+                //     ->maxLength(255)
+                //     ->placeholder('web')
+                //     ->helperText('Informe o nome do guard'),
+                CheckboxList::make('permissions')
+                    ->relationship('permissions', 'permission')
+                    ->options(function () {
+                        // return Permission::all()->pluck('description', 'id'); // mostra só a descrição
+                        // ou, se quiseres mostrar nome + descrição:
+                        return Permission::all()->mapWithKeys(fn($permission) => [
+                            $permission->id => "{$permission->permission} – {$permission->description}"
+                        ]);
+                    })
+                    ->label('Permissões atribuídas')
+                //->columns(2) // opcional: número de colunas para organizar as checkboxes
             ]);
     }
 
@@ -43,7 +59,8 @@ class RoleResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')->label('ID')->sortable()->searchable(),
-                TextColumn::make('name')->label('Role Name')->searchable(),
+                TextColumn::make('role')->label('Role Name')->searchable(),
+                TextColumn::make('permissions.permission')->label('Permitions')->searchable(),
 
             ])
             ->filters([

@@ -144,11 +144,14 @@ class RegistrationResource extends Resource
 
                 TextColumn::make('course.course')
                     ->label('Curso')
+                    //->limit(10)
+                    ->wrap()
                     ->sortable()
                     ->searchable(),
 
                 TextColumn::make('class.class')
                     ->label('Turma')
+                    ->wrap()
                     ->sortable()
                     ->searchable(),
 

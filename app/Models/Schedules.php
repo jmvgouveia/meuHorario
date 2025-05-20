@@ -13,7 +13,8 @@ class Schedules extends Model
         'id_teacher',
         'id_weekday',
         'id_subject',
-        'turno'
+        'turno',
+        'status'
     ];
 
     public function subjects()

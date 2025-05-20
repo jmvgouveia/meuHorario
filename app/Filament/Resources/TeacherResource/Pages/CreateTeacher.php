@@ -27,6 +27,7 @@ class CreateTeacher extends CreateRecord
             'name' => $data['name'],               // Nome do professor
             'email' => $userData['email'],         // Acessando o email do 'user'
             'password' => Hash::make($userData['password']),  // Acessando a senha do 'user'
+            // 'id_role' => 5, // ID do papel de professor
         ]);
 
         // Associar o id_user ao professor

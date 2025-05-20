@@ -48,6 +48,9 @@ use Filament\Forms\Components\Grid;
 
 class SchedulesResource extends Resource
 {
+
+
+
     protected static ?string $model = Schedules::class;
 
     protected static ?string $navigationGroup = 'Horários';
@@ -56,6 +59,39 @@ class SchedulesResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
 
+    // public static function canViewAny(): bool
+    // {
+    //     return Auth::user() && Auth::user()->hasPermissionTo('ver_horarios');
+    // }
+
+    // public static function canCreate(): bool
+    // {
+    //     return auth()->user()?->can('editar_horarios');
+    // }
+
+    // public static function canEdit(Model $record): bool
+    // {
+    //     return auth()->user()?->can('editar_horarios');
+    // }
+
+
+
+
+    // Filtrar os horários para mostrar apenas os do professor autenticado
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Verifica se o utilizador está autenticado e é um professor com registo
+        if (Auth::check() && Auth::user()->teacher) {
+            $teacherId = Auth::user()->teacher->id;
+
+            // Filtra os horários para mostrar apenas os do professor autenticado
+            $query->where('id_teacher', $teacherId);
+        }
+
+        return $query;
+    }
 
     public function atualizarEstado($get, $set)
     {
@@ -77,260 +113,10 @@ class SchedulesResource extends Resource
     }
 
 
-    // public static function form(Form $form): Form
-    // {
-    //     return $form
-    //         ->schema([
-    //             Section::make('Dados Gerais')
-    //                 ->description('Dados gerais do horário'),
-    //             Select::make('building_id')
-    //                 ->label('Núcleo ou Polo')
-    //                 ->required()
-    //                 ->options(Building::all()->pluck('name', 'id'))
-    //                 ->reactive() // muito importante para reatividade
-    //                 ->afterStateUpdated(function (callable $set) {
-    //                     // Limpa o campo de sala quando o prédio for alterado
-    //                     $set('id_room', null);
-    //                 })
-    //                 ->placeholder('Selecione o local da aula'),
-    //             //
-    //             Select::make('id_room')
-    //                 ->label('Sala')
-    //                 ->required()
-    //                 ->options(function (callable $get) {
-    //                     $buildingId = $get('building_id');
-    //                     if (!$buildingId) {
-    //                         return [];
-    //                     }
-
-    //                     return Room::where('building_id', $buildingId)
-    //                         ->pluck('name', 'id');
-    //                 })
-    //                 ->searchable()
-    //                 ->placeholder('Selecione a sala')
-    //                 ->reactive(),
-    //             //
-    //             Select::make('id_weekday')
-    //                 ->label('Dia da Semana')
-    //                 ->required()
-    //                 ->options(WeekDays::all()->pluck('weekday', 'id'))
-    //                 ->placeholder('Selecione o dia da semana'),
-
-    //             Select::make('id_timeperiod')
-    //                 ->label('Hora de Início')
-    //                 ->required()
-    //                 ->placeholder('Selecione a hora de inicio da aula')
-    //                 ->options(TimePeriod::all()->pluck('description', 'id'))
-    //                 ->reactive(),
-    //             //
-    //             Select::make('id_subject')
-    //                 ->label('Disciplina')
-    //                 ->required()
-    //                 ->reactive()
-    //                 ->options(function () {
-    //                     $userId = \Illuminate\Support\Facades\Auth::id();
-    //                     $teacher = Teacher::where('id_user', $userId)->first();
-
-    //                     if (!$teacher) {
-    //                         return collect(['' => 'Este utilizador não é um professor']);
-    //                     }
-
-    //                     // Obter o ano letivo ativo
-    //                     $activeYear = SchoolYears::where('active', true)->first();
-
-    //                     if (!$activeYear) {
-    //                         return collect(['' => 'Nenhum ano letivo ativo']);
-    //                     }
-
-    //                     // Obter apenas as disciplinas associadas ao professor para o ano letivo atual
-    //                     $subjects = Subject::whereHas('teachers', function ($query) use ($teacher, $activeYear) {
-    //                         $query->where('id_teacher', $teacher->id)
-    //                             ->where('teacher_subjects.id_schoolyear', $activeYear->id);
-    //                     })->pluck('subject', 'id');
-
-    //                     if ($subjects->isEmpty()) {
-    //                         return collect(['' => 'Nenhuma disciplina atribuída neste ano letivo']);
-    //                     }
-
-    //                     return $subjects;
-    //                 })
-    //                 ->placeholder('Escolha a disciplina')
-    //                 ->afterStateUpdated(function ($state, callable $set) {
-    //                     $set('id_subject', $state);
-    //                     $set('id_classes', []);        // limpa turmas
-    //                     $set('alunos', []);            // limpa alunos
-    //                 }),
-
-
-    //             // Select::make('id_subject')
-    //             //     ->label('Disciplina123')
-    //             //     ->required()
-    //             //     ->reactive()
-    //             //     ->options(fn() => \App\Models\Subject::pluck('subject', 'id'))
-    //             //     ->afterStateUpdated(function ($state, callable $set) {
-    //             //         $set('id_classes', []);
-    //             //         $set('alunos', []);
-    //             //     }),
-
-    //             Select::make('id_classes')
-    //                 ->label('Turmas')
-    //                 ->multiple()
-    //                 ->helperText('Selecione a(s) turma(s) que vão assistir a esta aula')
-    //                 ->reactive()
-    //                 ->options(function (callable $get) {
-    //                     $subjectId = $get('id_subject');
-
-    //                     if (!$subjectId) return [];
-
-    //                     $subject = \App\Models\Subject::find($subjectId);
-    //                     if (!$subject) return [];
-
-    //                     $courseIds = $subject->courses()->select('courses.id')->pluck('id');
-
-    //                     return \App\Models\Classes::whereIn('id_course', $courseIds)->pluck('class', 'id');
-    //                 })
-    //                 ->afterStateUpdated(fn($state, callable $set) => $set('alunos', [])),
-
-
-
-
-    //             CheckboxList::make('alunos')
-    //                 ->label('Alunos matriculados na disciplina')
-    //                 ->helperText('Selecione os alunos que vão assistir a esta aula')
-    //                 ->columns(2)
-    //                 ->options(function (callable $get) {
-    //                     $subjectId = $get('id_subject');
-    //                     $classIds = $get('id_classes') ?? [];
-    //                     $schoolYear = \App\Models\SchoolYears::where('active', true)->first();
-
-    //                     if (!$subjectId || !$schoolYear) return [];
-
-    //                     $registrationIds = DB::table('registrations_subjects')
-    //                         ->where('id_subject', $subjectId)
-    //                         ->pluck('id_registration');
-
-    //                     if ($registrationIds->isEmpty()) return [];
-
-    //                     $query = \App\Models\Registration::with('student')
-    //                         ->whereIn('id', $registrationIds)
-    //                         ->where('id_schoolyear', $schoolYear->id);
-
-    //                     if (!empty($classIds)) {
-    //                         $query->whereIn('id_class', $classIds);
-    //                     }
-
-    //                     return $query->get()->pluck('student.name', 'id_student');
-    //                 }),
-
-
-
-
-
-
-    //             // Select::make('id_class')
-    //             //     ->label('Turma')
-    //             //     //  ->required()
-    //             //     ->reactive() // ← reativo para recalcular o options()
-    //             //     ->options(function (callable $get) {
-    //             //         $subjectId = $get('id_subject');
-
-    //             //         if (!$subjectId) return [];
-
-    //             //         $subject = \App\Models\Subject::find($subjectId);
-    //             //         if (!$subject) return [];
-
-    //             //         $courseIds = $subject->courses()->pluck('courses.id');
-
-    //             //         if ($courseIds->isEmpty()) return [];
-
-    //             //         return \App\Models\Classes::whereIn('id_course', $courseIds)->pluck('class', 'id');
-    //             //     })
-    //             //     ->placeholder('Escolha a turma'),
-    //             //
-    //             Select::make('turno')
-    //                 ->label('Turno')
-    //                 ->options([
-    //                     'turmaA' => 'Turma A',
-    //                     'turmaB' => 'Turma B',
-    //                     'turmaC' => 'Turma C',
-    //                     'turmaD' => 'Turma D',
-    //                 ])
-    //                 ->placeholder('Selecione o turno')
-    //                 ->helperText('em caso de ser a turma toda deixar em branco'),
-
-    //             // Placeholder::make('alunos_matriculados')
-    //             //     ->label('Alunos matriculados na disciplina')
-    //             //     ->content(function (callable $get) {
-    //             //         $subjectId = $get('id_subject');
-    //             //         $classId = $get('id_class');
-    //             //         $schoolYear = \App\Models\SchoolYears::where('active', true)->first();
-
-    //             //         if (!$subjectId || !$schoolYear) {
-    //             //             return 'Selecione uma disciplina (e opcionalmente uma turma).';
-    //             //         }
-
-    //             //         // 1. Obter IDs das matrículas que têm esta disciplina
-    //             //         $registrationIds = DB::table('registrations_subjects')
-    //             //             ->where('id_subject', $subjectId)
-    //             //             ->pluck('id_registration');
-
-    //             //         if ($registrationIds->isEmpty()) {
-    //             //             return 'Nenhuma matrícula encontrada nesta disciplina.';
-    //             //         }
-
-    //             //         // 2. Filtrar essas matrículas pelo ano letivo e (opcionalmente) pela turma
-    //             //         $registrations = \App\Models\Registration::with('student')
-    //             //             ->whereIn('id', $registrationIds)
-    //             //             ->where('id_schoolyear', $schoolYear->id);
-
-    //             //         if ($classId) {
-    //             //             $registrations->where('id_class', $classId);
-    //             //         }
-
-    //             //         $students = $registrations->get()->pluck('student.name');
-
-    //             //         return $students->isNotEmpty()
-    //             //             ? $students->join(', ')
-    //             //             : 'Nenhum aluno encontrado para os filtros aplicados.';
-    //             //     }),
-    //             // Section::make('Alunos')
-    //             //     ->description('Selecione os alunos que vão assistir a esta aula'),
-
-    //             // CheckboxList::make('alunos')
-    //             //     ->label('Alunos da disciplina')
-    //             //     ->columns(2)
-    //             //     ->columnSpanFull()
-    //             //     ->reactive()
-    //             //     ->options(function (callable $get) {
-    //             //         $subjectId = $get('id_subject');
-    //             //         $classId = $get('id_class');
-    //             //         $schoolYear = \App\Models\SchoolYears::where('active', true)->first();
-
-    //             //         if (!$subjectId || !$schoolYear) return [];
-
-    //             //         $registrationIds = DB::table('registrations_subjects')
-    //             //             ->where('id_subject', $subjectId)
-    //             //             ->pluck('id_registration');
-
-    //             //         if ($registrationIds->isEmpty()) return [];
-
-    //             //         $registrations = \App\Models\Registration::with('student')
-    //             //             ->whereIn('id', $registrationIds)
-    //             //             ->where('id_schoolyear', $schoolYear->id);
-
-    //             //         if ($classId) {
-    //             //             $registrations->where('id_class', $classId);
-    //             //         }
-
-    //             //         return $registrations->get()->pluck('student.name', 'id_student');
-    //             //     }),
-
-    //         ]);
-    // }
-
 
     public static function form(Form $form): Form
     {
+
         return $form
             ->schema([
 
@@ -378,6 +164,9 @@ class SchedulesResource extends Resource
                                     ->placeholder('Selecione a hora de início')
                                     ->options(TimePeriod::all()->pluck('description', 'id'))
                                     ->reactive(),
+
+
+
                             ]),
                     ]),
 
@@ -562,6 +351,11 @@ class SchedulesResource extends Resource
                     ->label('Sala')
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('status')
+                    ->label('Estado')
+                    ->sortable()
+                    ->searchable(),
+
             ])
             ->filters([
                 //

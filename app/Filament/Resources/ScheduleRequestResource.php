@@ -23,6 +23,8 @@ class ScheduleRequestResource extends Resource
     protected static ?string $model = ScheduleRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Horários';
+    protected static ?string $navigationLabel = 'Pedidos de Troca';
 
     public static function form(Form $form): Form
     {
@@ -86,15 +88,24 @@ class ScheduleRequestResource extends Resource
         ];
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $teacher = Teacher::where('id_user', Filament::auth()->id())->first();
+    // public static function getEloquentQuery(): Builder
+    // {
+    //     // Se for admin, mostra tudo
+    //     if (Filament::auth()->user()?->hasRole('admin')) {
+    //         return parent::getEloquentQuery();
+    //     }
 
-        return parent::getEloquentQuery()
-            ->whereHas(
-                'scheduleConflict',
-                fn($query) =>
-                $query->where('id_teacher', $teacher->id)
-            );
-    }
+    //     // Se for professor com registo, restringe ao seu ID
+    //     $teacher = Teacher::where('id_user', Filament::auth()->id())->first();
+
+    //     if ($teacher) {
+    //         return parent::getEloquentQuery()
+    //             ->whereHas('scheduleConflict', function ($query) use ($teacher) {
+    //                 $query->where('id_teacher', $teacher->id);
+    //             });
+    //     }
+
+    //     // Caso contrário (sem papel ou associação), não mostra nada
+    //     return parent::getEloquentQuery()->whereRaw('1 = 0');
+    // }
 }

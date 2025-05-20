@@ -84,7 +84,7 @@ class TeacherResource extends Resource
                 TextInput::make('user.password')
                     ->label('Senha')
                     ->password()
-                    ->minLength(8)
+                    ->minLength(5)
                     ->nullable()
                     ->placeholder('Deixe em branco para manter a atual')
                     ->columnSpanFull(),

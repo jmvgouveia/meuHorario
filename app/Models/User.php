@@ -8,11 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Role;
+use App\Models\Teacher;
+use App\Models\UserRole;
+
+
 
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
+
+
     use HasFactory, HasRoles, Notifiable;
 
     /**
@@ -60,6 +67,15 @@ class User extends Authenticatable
     // }
     public function teacher()
     {
-        return $this->hasOne(Teacher::class);
+        return $this->hasOne(Teacher::class, 'id_user');
+    }
+    // public function role()
+    // {
+    //     return $this->belongsTo(Role::class, 'id_role');
+    // }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles', 'id_user', 'id_role');
     }
 }

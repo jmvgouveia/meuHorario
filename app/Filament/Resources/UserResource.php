@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use Spatie\Permission\Models\Role;
+
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
@@ -15,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\Select;
 
 class UserResource extends Resource
 {
@@ -46,6 +49,12 @@ class UserResource extends Resource
                     ->placeholder('Introduza a senha')
                     ->password()
                     ->dehydrated(fn($state) => filled($state)),
+                Select::make('roles')
+                    ->label('Papel')
+                    ->multiple()
+                    ->relationship('roles', 'role')
+                    ->options(Role::all()->pluck('role', 'id'))
+                    ->preload(),
 
 
             ]);
@@ -67,14 +76,34 @@ class UserResource extends Resource
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('created_at')
-                    ->label('Criado em')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('updated_at')
-                    ->label('Atualizado em')
-                    ->dateTime()
-                    ->sortable(),
+                TextColumn::make('roles.role')
+                    ->label('Perfis')
+                    ->badge()
+                    //->list()
+                    ->colors([
+                        'danger' => 'Admin',
+                        'success' => 'Professor',
+                        'info' => 'Gestor',
+                        'warning' => 'Convidado',
+                    ]),
+
+                // TextColumn::make('roles.role')
+                //     ->label('Papel')
+                //     ->badge()
+                //     ->colors([
+                //         'danger' => 'Admin',
+                //         'success' => 'Professor',
+                //         'info' => 'Gestor',
+                //         'warning' => 'convidado',
+                //     ]),
+                // TextColumn::make('created_at')
+                //     ->label('Criado em')
+                //     ->dateTime()
+                //     ->sortable(),
+                // TextColumn::make('updated_at')
+                //     ->label('Atualizado em')
+                //     ->dateTime()
+                //     ->sortable(),
             ])
             ->filters([
                 //

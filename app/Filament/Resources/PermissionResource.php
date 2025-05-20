@@ -17,29 +17,29 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 
 class PermissionResource extends Resource
-{    protected static bool $shouldRegisterNavigation = false;      // ESCONDER NO MENU
+{    //protected static bool $shouldRegisterNavigation = false;      // ESCONDER NO MENU
 
     protected static ?string $model = Permission::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Admin';
+    protected static ?string $navigationGroup = 'Administração';
+    protected static ?string $navigationLabel = 'Permissões';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('name')
-                ->label('Permission Name')
-                ->required()
-                ->maxLength(255),
-            TextInput::make('guard_name')
-                ->label('Guard Name')
-                ->required()
-                ->maxLength(255)
-                ->placeholder('web')
-                ->helperText('Informe o nome do guard'),
-        ]);
+                TextInput::make('permission')
+                    ->label('Permission Name')
+                    ->required()
+                    ->maxLength(255),
+                TextInput::make('description')
+                    ->label('Description')
+                    ->required()
+                    ->maxLength(255)
+                    ->placeholder('Preencha com a descrição'),
 
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -47,8 +47,8 @@ class PermissionResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('id')->label('ID')->sortable()->searchable(),
-                TextColumn::make('name')->label('Role Name')->searchable(),
-                TextColumn::make('guard_name')->label('Guard Name')->searchable(),
+                TextColumn::make('permission')->label('Permition')->searchable(),
+                TextColumn::make('description')->label('Description')->searchable(),
             ])
             ->filters([
                 //
