@@ -36,9 +36,9 @@ class ScheduleRequestResource extends Resource
 
                 Textarea::make('response')
                     ->label('Resposta do Professor')
-                    ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
-                    ->required(fn($record) => $record->status === 'recusado')
                     ->reactive(),
+                    /* ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
+                    ->required(fn($record) => $record->status === 'recusado') */
 
                 Select::make('status')
                     ->label('Estado do Pedido')
