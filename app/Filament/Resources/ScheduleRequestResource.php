@@ -37,7 +37,7 @@ class ScheduleRequestResource extends Resource
                 Textarea::make('response')
                     ->label('Resposta do Professor')
                     ->reactive(),
-                    /* ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
+                /* ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
                     ->required(fn($record) => $record->status === 'recusado') */
 
                 Select::make('status')
@@ -57,31 +57,54 @@ class ScheduleRequestResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id_shedule_conflict')
-                    ->label('ID do Conflito')
+                Tables\Columns\TextColumn::make('id_schedule_conflict')
+                    ->label('Conflito')
+                    ->wrap()
+                    ->toggleable()
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('id_schedule_novo')
+                    ->label('P.Troca')
+                    ->toggleable()
                     ->limit(50),
                 Tables\Columns\TextColumn::make('scheduleConflict.teacher.name')
-                    ->label('Professor do Conflito')
-                    ->limit(50),
+                    ->label('Requerente')
+                    ->wrap()
+                    ->toggleable()
+                    ->limit(25),
                 Tables\Columns\TextColumn::make('scheduleConflict.room.name')
-                    ->label('Sala do Conflito')
+                    ->label('Sala')
+                    ->toggleable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('scheduleConflict.weekday.name')
-                    ->label('Dia da Semana do Conflito')
+                Tables\Columns\TextColumn::make('scheduleConflict.weekday.weekday')
+                    ->label('Dia da Semana')
+                    ->wrap()
+                    ->toggleable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('scheduleConflict.timePeriod.name')
-                    ->label('Período do Conflito')
-                    ->limit(50),    
+                Tables\Columns\TextColumn::make('scheduleConflict.timePeriod.description')
+                    ->label('Hora da Aula')
+                    ->wrap()
+                    ->toggleable()
+                    ->limit(50),
                 Tables\Columns\TextColumn::make('justification')
                     ->label('Justificação do Pedido')
+                    ->wrap()
+                    ->toggleable()
                     ->limit(50),
                 Tables\Columns\TextColumn::make('response')
                     ->label('Resposta do Professor')
+                    ->toggleable()
                     ->limit(50),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado do Pedido')
-                    
-                    ->sortable(),    
+                    ->toggleable()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Pendente' => 'warning',
+                        'Aprovado' => 'success',
+                        'Recusado' => 'danger',
+                        default => 'gray',
+                    })
+                    ->sortable(),
                 //
             ])
             ->filters([

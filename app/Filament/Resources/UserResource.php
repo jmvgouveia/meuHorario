@@ -45,7 +45,7 @@ class UserResource extends Resource
                 TextInput::make('password')
                     ->label('Senha')
                     ->required()
-                    ->maxLength(255)
+                    ->minLength(5)
                     ->placeholder('Introduza a senha')
                     ->password()
                     ->dehydrated(fn($state) => filled($state)),

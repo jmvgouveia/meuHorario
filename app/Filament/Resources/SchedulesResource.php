@@ -41,6 +41,10 @@ use Illuminate\Support\Facades\Log;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Actions as ActionGroup;
+
+use Filament\Forms\Components\Actions\Action;
+
 
 
 
@@ -58,6 +62,7 @@ class SchedulesResource extends Resource
     protected static ?int $navigationSort = 0;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public ?Schedule $conflictingSchedule = null;
 
     // public static function canViewAny(): bool
     // {
@@ -123,6 +128,7 @@ class SchedulesResource extends Resource
                 Section::make('Local da Aula')
                     ->description('Selecione o núcleo/pólo e a sala onde será dada a aula')
                     ->schema([
+
                         Grid::make(2)
                             ->schema([
                                 Select::make('building_id')
@@ -277,6 +283,7 @@ class SchedulesResource extends Resource
                     ->description('Selecione o turno da turma ')
                     ->schema([
 
+
                         Select::make('turno')
                             ->label('Turno')
                             ->reactive()
@@ -307,7 +314,25 @@ class SchedulesResource extends Resource
                             })
                             ->placeholder('Em caso de ser a turma toda deixar em branco'),
 
+
+
                     ]),
+                ActionGroup::make([
+                    Action::make('justificarConflito')
+                        ->label('Solicitar Troca de Horário')
+                        ->visible(fn($livewire) => $livewire->conflictingSchedule !== null)
+                        ->modalHeading('Justificação do Conflito')
+                        ->modalSubmitActionLabel('Submeter Justificação')
+                        ->modalCancelActionLabel('Cancelar')
+                        ->form([
+
+                            Textarea::make('justification')
+                                ->label('Escreva a justificação')
+                                ->required()
+                                ->minLength(10),
+                        ])
+                        ->action(fn(array $data, $livewire) => $livewire->submitJustification($data)),
+                ]),
             ]);
     }
 
@@ -322,38 +347,54 @@ class SchedulesResource extends Resource
                 TextColumn::make('id')
                     ->label('ID')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('teacher.teachernumber')
                     ->label('Professor')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('teacher.name')
                     ->label('Nome do Professor')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('subject.subject')
                     ->label('Disciplina')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('weekday.weekday')
                     ->label('Dia da Semana')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('timeperiod.description')
                     ->label('Hora da Aula')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('room.building.name')
                     ->label('Pólo')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('room.name')
                     ->label('Sala')
                     ->sortable()
+                    ->toggleable()
                     ->searchable(),
                 TextColumn::make('status')
                     ->label('Estado')
                     ->sortable()
+                    ->toggleable()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Pendente' => 'warning',
+                        'Aprovado' => 'success',
+                        'Recusado' => 'danger',
+                        default => 'gray',
+                    })
                     ->searchable(),
 
             ])
