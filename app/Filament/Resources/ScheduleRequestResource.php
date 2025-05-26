@@ -57,6 +57,31 @@ class ScheduleRequestResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id_shedule_conflict')
+                    ->label('ID do Conflito')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('scheduleConflict.teacher.name')
+                    ->label('Professor do Conflito')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('scheduleConflict.room.name')
+                    ->label('Sala do Conflito')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('scheduleConflict.weekday.name')
+                    ->label('Dia da Semana do Conflito')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('scheduleConflict.timePeriod.name')
+                    ->label('Período do Conflito')
+                    ->limit(50),    
+                Tables\Columns\TextColumn::make('justification')
+                    ->label('Justificação do Pedido')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('response')
+                    ->label('Resposta do Professor')
+                    ->limit(50),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado do Pedido')
+                    
+                    ->sortable(),    
                 //
             ])
             ->filters([
