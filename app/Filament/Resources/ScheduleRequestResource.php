@@ -16,6 +16,18 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
 use App\Models\Teacher;
 use Filament\Facades\Filament;
+use Filament\Tables\Filters\TabsFilter;
+use Filament\Forms\Components\Wizard;
+use Filament\Forms\Components\Section;
+
+use Filament\Forms\Components\Grid;
+use App\Models\Building;
+use App\Models\Room;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns;
+
 
 
 class ScheduleRequestResource extends Resource
@@ -26,30 +38,62 @@ class ScheduleRequestResource extends Resource
     protected static ?string $navigationGroup = 'Horários';
     protected static ?string $navigationLabel = 'Pedidos de Troca';
 
+public static function getEloquentQuery(): Builder
+{
+    $userId = Filament::auth()->id();
+
+    $teacher = \App\Models\Teacher::where('id_user', $userId)->first();
+
+    return parent::getEloquentQuery()
+        ->where(function ($query) use ($teacher) {
+            $query
+                ->where('id_teacher_requester', $teacher?->id)
+                ->orWhereHas('scheduleConflict', function ($subQuery) use ($teacher) {
+                    $subQuery->where('id_teacher', $teacher?->id);
+                });
+        });
+}
+
+
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
+
+
+    ->schema([
+
+
+
+
+
+
+
+
+
+        
                 Textarea::make('justification')
                     ->label('Justificação do Pedido')
-                    ->disabled(),
+                    ->disabled()
+                    ->columnSpan('full'),  // campo full width
 
-                Textarea::make('response')
-                    ->label('Resposta do Professor')
-                    ->reactive(),
+
+
+                // Textarea::make('response')
+                //     ->label('Resposta do Professor')
+                //     ->reactive()
+                //     ->columnSpan('full'), 
+
                 /* ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
                     ->required(fn($record) => $record->status === 'recusado') */
-
-                Select::make('status')
+                Textarea::make('status')
                     ->label('Estado do Pedido')
-                    ->options([
-                        'pendente' => 'Pendente',
-                        'recusado' => 'Recusado',
-                        'aprovado_prof' => 'Aprovado pelo Professor',
-                        'escalado' => 'Escalado para Coordenador',
-                        'aprovado_coord' => 'Aprovado pelo Coordenador',
-                    ])
-                    ->required(),
+                    ->sortable()
+                    ->disabled(),
+                // Select::make('status')
+                //     ->label('Estado do Pedido')
+
+                    
+                   
             ]);
     }
 
@@ -57,16 +101,16 @@ class ScheduleRequestResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id_schedule_conflict')
-                    ->label('Conflito')
-                    ->wrap()
-                    ->toggleable()
-                    ->limit(50),
-                Tables\Columns\TextColumn::make('id_schedule_novo')
-                    ->label('P.Troca')
-                    ->toggleable()
-                    ->limit(50),
-                Tables\Columns\TextColumn::make('scheduleConflict.teacher.name')
+                // Tables\Columns\TextColumn::make('id_schedule_conflict')
+                //     ->label('Conflito')
+                //     ->wrap()
+                //     ->toggleable()
+                //     ->limit(50),
+                // Tables\Columns\TextColumn::make('id_schedule_novo')
+                //     ->label('P.Troca')
+                //     ->toggleable()
+                //     ->limit(50),
+                Tables\Columns\TextColumn::make('requester.name')
                     ->label('Requerente')
                     ->wrap()
                     ->toggleable()
@@ -90,10 +134,11 @@ class ScheduleRequestResource extends Resource
                     ->wrap()
                     ->toggleable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('response')
-                    ->label('Resposta do Professor')
-                    ->toggleable()
-                    ->limit(50),
+                // Tables\Columns\TextColumn::make('response')
+                //     ->label('Resposta do Professor')
+                //     ->wrap()
+                //     ->toggleable()
+                //     ->limit(50),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado do Pedido')
                     ->toggleable()
@@ -108,7 +153,8 @@ class ScheduleRequestResource extends Resource
                 //
             ])
             ->filters([
-                //
+             
+                           //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
