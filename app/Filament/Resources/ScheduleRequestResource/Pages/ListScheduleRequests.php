@@ -17,69 +17,68 @@ class ListScheduleRequests extends ListRecords
 
     public string $filtroAtual = 'todos';
 
-protected function getCounts(): array
-{
-    $userId = Filament::auth()->id();
+    protected function getCounts(): array
+    {
+        $userId = Filament::auth()->id();
 
-    $teacher = Teacher::where('id_user', $userId)->first();
+        $teacher = \App\Models\Teacher::where('id_user', $userId)->first();
 
-    if (!$teacher) {
+        if (!$teacher) {
+            return [
+                'todos' => 0,
+                'meus' => 0,
+                'recebidos' => 0,
+            ];
+        }
+
+        $meus = \App\Models\ScheduleRequest::where('id_teacher_requester', $teacher->id)->count();
+
+        $recebidos = \App\Models\ScheduleRequest::whereHas('scheduleConflict', function ($q) use ($teacher) {
+            $q->where('id_teacher', $teacher->id);
+        })->where('status', '!=', 'Cancelado')->count();
+
+        $todos = \App\Models\ScheduleRequest::where(function ($query) use ($teacher) {
+            $query->where('id_teacher_requester', $teacher->id)
+                ->orWhere(function ($sub) use ($teacher) {
+                    $sub->whereHas('scheduleConflict', function ($conf) use ($teacher) {
+                        $conf->where('id_teacher', $teacher->id);
+                    })->where('status', '!=', 'Cancelado');
+                });
+        })->count();
+
         return [
-            'todos' => 0,
-            'meus' => 0,
-            'recebidos' => 0,
+            'todos' => $todos,
+            'meus' => $meus,
+            'recebidos' => $recebidos,
         ];
     }
 
-    $todos = ScheduleRequest::where(function ($query) use ($teacher) {
-        $query->where('id_teacher_requester', $teacher->id)
-            ->orWhereHas('scheduleConflict', function ($q) use ($teacher) {
-                $q->where('id_teacher', $teacher->id);
-            });
-    })->count();
-
-    $meus = ScheduleRequest::where('id_teacher_requester', $teacher->id)->count();
-
-    $recebidos = ScheduleRequest::whereHas('scheduleConflict', function ($q) use ($teacher) {
-        $q->where('id_teacher', $teacher->id);
-    })->count();
-
-    return [
-        'todos' => $todos,
-        'meus' => $meus,
-        'recebidos' => $recebidos,
-    ];
-}
-
     protected function getHeaderActions(): array
-        {
+    {
 
-            // $countTodos = 10;      // total pedidos (exemplo)
-            // $countMeus = 3;        // meus pedidos
-            // $countRecebidos = 5;   // pedidos recebidos
 
-    $counts = $this->getCounts();
+        $counts = $this->getCounts();
 
         return [
             Action::make('todos')
                 ->label('Todos Pedidos (' . $counts['todos'] . ')')
-                ->action(fn () => $this->filtroAtual = 'todos')
-                ->color(fn () => $this->filtroAtual === 'todos' ? 'primary' : 'secondary'),
+                ->action(fn() => $this->filtroAtual = 'todos')
+                ->color(fn() => $this->filtroAtual === 'todos' ? 'primary' : 'secondary'),
 
             Action::make('meus')
-                ->label(fn () => 'Meus Pedidos (' . $counts['meus'] . ')')
-                ->action(fn () => $this->filtroAtual = 'meus')
-                ->color(fn () => $this->filtroAtual === 'meus' ? 'primary' : 'secondary'),
-               
+                ->label(fn() => 'Meus Pedidos (' . $counts['meus'] . ')')
+                ->action(fn() => $this->filtroAtual = 'meus')
+                ->color(fn() => $this->filtroAtual === 'meus' ? 'primary' : 'secondary'),
+
 
             Action::make('recebidos')
                 ->label('Pedidos Recebidos (' . $counts['recebidos'] . ')')
-                ->action(fn () => $this->filtroAtual = 'recebidos')
-                ->color(fn () => $this->filtroAtual === 'recebidos' ? 'primary' : 'secondary'),
+                ->action(fn() => $this->filtroAtual = 'recebidos')
+                ->color(fn() => $this->filtroAtual === 'recebidos' ? 'primary' : 'secondary'),
         ];
     }
 
-    
+
     protected function getTableQuery(): ?Builder
     {
         $userId = Filament::auth()->id();
@@ -88,16 +87,27 @@ protected function getCounts(): array
         $query = parent::getTableQuery();
 
         return match ($this->filtroAtual) {
-            'meus' => $query->where('id_teacher_requester', $teacherId),
-            'recebidos' => $query->whereHas('scheduleConflict', function ($q) use ($teacherId) {
-                $q->where('id_teacher', $teacherId);
-            }),
-            default => $query->where(function ($q) use ($teacherId) {
-                $q->where('id_teacher_requester', $teacherId)
-                    ->orWhereHas('scheduleConflict', function ($sub) use ($teacherId) {
-                        $sub->where('id_teacher', $teacherId);
-                    });
-            }),
+            // ✅ Mostra todos os pedidos feitos pelo professor (mesmo os cancelados)
+            'meus' => $query
+                ->where('id_teacher_requester', $teacherId),
+
+            // ❌ Oculta pedidos cancelados para quem os recebeu
+            'recebidos' => $query
+                ->whereHas('scheduleConflict', function ($q) use ($teacherId) {
+                    $q->where('id_teacher', $teacherId);
+                })
+                ->where('status', '!=', 'Cancelado'),
+
+            // ❌ Oculta pedidos cancelados nos recebidos, mas mantém nos feitos
+            default => $query
+                ->where(function ($q) use ($teacherId) {
+                    $q->where('id_teacher_requester', $teacherId)
+                        ->orWhere(function ($sub) use ($teacherId) {
+                            $sub->whereHas('scheduleConflict', function ($conf) use ($teacherId) {
+                                $conf->where('id_teacher', $teacherId);
+                            })->where('status', '!=', 'Cancelado');
+                        });
+                }),
         };
     }
 }

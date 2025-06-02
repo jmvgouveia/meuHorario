@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Filament\Widgets;
+
 use Illuminate\Contracts\View\View;
 
 use Filament\Widgets\Widget;
@@ -8,21 +9,23 @@ use App\Models\Schedules;
 use App\Models\Teacher;
 use App\Models\WeekDays;
 use App\Models\TimePeriod;
+use Filament\Facades\Filament;  // <-- Importar aqui
+
 
 class WeeklyScheduleWidget extends Widget
 {
     protected static string $view = 'filament.widgets.weekly-schedule-widget';
- 
+
     protected int | string | array $columnSpan = [
-    'sm' => 12,
-    'md' => 6,
-    'lg' => 'full',
-];
-    
+        'sm' => 12,
+        'md' => 6,
+        'lg' => 'full',
+    ];
+
     public function render(): View
 
     {
-        $userId = auth()->id();
+        $userId = Filament::auth()->id();
         $teacher = Teacher::where('id_user', $userId)->first();
 
         if (! $teacher) {

@@ -38,21 +38,21 @@ class ScheduleRequestResource extends Resource
     protected static ?string $navigationGroup = 'Horários';
     protected static ?string $navigationLabel = 'Pedidos de Troca';
 
-public static function getEloquentQuery(): Builder
-{
-    $userId = Filament::auth()->id();
+    public static function getEloquentQuery(): Builder
+    {
+        $userId = Filament::auth()->id();
 
-    $teacher = \App\Models\Teacher::where('id_user', $userId)->first();
+        $teacher = \App\Models\Teacher::where('id_user', $userId)->first();
 
-    return parent::getEloquentQuery()
-        ->where(function ($query) use ($teacher) {
-            $query
-                ->where('id_teacher_requester', $teacher?->id)
-                ->orWhereHas('scheduleConflict', function ($subQuery) use ($teacher) {
-                    $subQuery->where('id_teacher', $teacher?->id);
-                });
-        });
-}
+        return parent::getEloquentQuery()
+            ->where(function ($query) use ($teacher) {
+                $query
+                    ->where('id_teacher_requester', $teacher?->id)
+                    ->orWhereHas('scheduleConflict', function ($subQuery) use ($teacher) {
+                        $subQuery->where('id_teacher', $teacher?->id);
+                    });
+            });
+    }
 
 
     public static function form(Form $form): Form
@@ -60,7 +60,7 @@ public static function getEloquentQuery(): Builder
         return $form
 
 
-    ->schema([
+            ->schema([
 
 
 
@@ -70,7 +70,7 @@ public static function getEloquentQuery(): Builder
 
 
 
-        
+
                 Textarea::make('justification')
                     ->label('Justificação do Pedido')
                     ->disabled()
@@ -81,19 +81,19 @@ public static function getEloquentQuery(): Builder
                 // Textarea::make('response')
                 //     ->label('Resposta do Professor')
                 //     ->reactive()
-                //     ->columnSpan('full'), 
+                //     ->columnSpan('full'),
 
                 /* ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
                     ->required(fn($record) => $record->status === 'recusado') */
                 Textarea::make('status')
                     ->label('Estado do Pedido')
-                    ->sortable()
+                    //->sortable()
                     ->disabled(),
                 // Select::make('status')
                 //     ->label('Estado do Pedido')
 
-                    
-                   
+
+
             ]);
     }
 
@@ -153,11 +153,11 @@ public static function getEloquentQuery(): Builder
                 //
             ])
             ->filters([
-             
-                           //
+
+                //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

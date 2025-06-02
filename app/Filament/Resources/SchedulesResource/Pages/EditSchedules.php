@@ -4,7 +4,7 @@ namespace App\Filament\Resources\SchedulesResource\Pages;
 
 use App\Filament\Resources\SchedulesResource;
 use Filament\Resources\Pages\EditRecord;
-use App\Models\Schedule;
+use App\Models\Schedules;
 
 
 class EditSchedules extends EditRecord
@@ -12,7 +12,7 @@ class EditSchedules extends EditRecord
     protected static string $resource = SchedulesResource::class;
 
 
-    public ?Schedule $conflictingSchedule = null;
+    public ?Schedules $conflictingSchedule = null;
 
 
     protected function mutateFormDataBeforeSave(array $data): array
