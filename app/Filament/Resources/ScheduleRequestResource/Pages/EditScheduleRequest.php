@@ -39,6 +39,7 @@ class EditScheduleRequest extends EditRecord
 
         // ✅ Quem pode aprovar ou recusar (dono do horário original)
         if ($isReceiver) {
+
             if ($status !== 'Recusado') {
                 $actions[] = Action::make('accept')
                     ->label('Aceitar Troca')
@@ -98,29 +99,30 @@ class EditScheduleRequest extends EditRecord
                             ->send();
                     });
             }
+        }
 
-            if ($status === 'Recusado') {
-                $actions[] = Action::make('escalar')
-                    ->label('Escalar Situação')
-                    ->color('warning')
-                    ->form([
-                        Textarea::make('response')
-                            ->label('Justificação para Escalar')
-                            ->required()
-                            ->rows(4),
-                    ])
-                    ->action(function (array $data) {
-                        $this->record->update([
-                            'status' => 'Escalado',
-                            'justification_escalada' => $data['response'],
-                        ]);
-                        Notification::make()
-                            ->title('Situação Escalada')
-                            ->warning()
-                            ->body('O pedido foi escalado para análise.')
-                            ->send();
-                    });
-            }
+        //
+        if ($isRequestOwner && $status === 'Recusado') {
+            $actions[] = Action::make('escalar')
+                ->label('Escalar Situação')
+                ->color('warning')
+                ->form([
+                    Textarea::make('response')
+                        ->label('Justificação para Escalar')
+                        ->required()
+                        ->rows(4),
+                ])
+                ->action(function (array $data) {
+                    $this->record->update([
+                        'status' => 'Escalado',
+                        'justification_escalada' => $data['response'],
+                    ]);
+                    Notification::make()
+                        ->title('Situação Escalada')
+                        ->warning()
+                        ->body('O pedido foi escalado para análise.')
+                        ->send();
+                });
         }
 
         // ✅ Quem fez o pedido pode cancelar (se ainda estiver pendente)
@@ -148,9 +150,9 @@ class EditScheduleRequest extends EditRecord
 
         // Botão sempre presente para voltar
         $actions[] = Action::make('cancel')
-            ->label('Voltar')
+            ->label('Cancelar')
             ->url($this->getResource()::getUrl('index'))
-            ->color('secondary');
+            ->color('gray');
 
         return $actions;
     }

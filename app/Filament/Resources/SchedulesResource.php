@@ -344,21 +344,21 @@ class SchedulesResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable()
-                    ->toggleable()
-                    ->searchable(),
-                TextColumn::make('teacher.teachernumber')
-                    ->label('Professor')
-                    ->sortable()
-                    ->toggleable()
-                    ->searchable(),
-                TextColumn::make('teacher.name')
-                    ->label('Nome do Professor')
-                    ->sortable()
-                    ->toggleable()
-                    ->searchable(),
+                // TextColumn::make('id')
+                //     ->label('ID')
+                //     ->sortable()
+                //     ->toggleable()
+                //     ->searchable(),
+                // TextColumn::make('teacher.teachernumber')
+                //     ->label('Professor')
+                //     ->sortable()
+                //     ->toggleable()
+                //     ->searchable(),
+                // TextColumn::make('teacher.name')
+                //     ->label('Nome do Professor')
+                //     ->sortable()
+                //     ->toggleable()
+                //     ->searchable(),
                 TextColumn::make('subject.subject')
                     ->label('Disciplina')
                     ->sortable()

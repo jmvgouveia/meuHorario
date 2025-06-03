@@ -115,7 +115,7 @@ class CreateSchedules extends CreateRecord
             'id_weekday' => $this->conflictingSchedule->id_weekday,
             'id_timeperiod' => $this->conflictingSchedule->id_timeperiod,
             'id_teacher' => $teacher?->id,
-              logger('id_teacher',[$teacher?->id] ),
+            logger('id_teacher', [$teacher?->id]),
             'id_subject' => $formState['id_subject'] ?? null,
             'turno' => $formState['turno'] ?? null,
             'id_schoolyear' => $activeYear?->id,
@@ -124,7 +124,7 @@ class CreateSchedules extends CreateRecord
 
         ScheduleRequest::create([
             'id_schedule_conflict' => $this->conflictingSchedule->id,
-            'id_teacher_requester' => $teacher?->id, 
+            'id_teacher_requester' => $teacher?->id,
             //   logger('id_teacher_requester',[$teacher?->id] ),
             // 'id_teacher_owner' => $this->conflictingSchedule->id_teacher,
             // logger('id_teacher_owner',[$this->conflictingSchedule->id_teacher] ),
@@ -135,7 +135,7 @@ class CreateSchedules extends CreateRecord
 
         Notification::make()
             ->title('Pedido de troca criado')
-             ->body("O seu pedido de troca foi criado com sucesso para o conflito.")
+            ->body("O seu pedido de troca foi criado com sucesso para o conflito.")
             ->success()
             ->send();
     }
