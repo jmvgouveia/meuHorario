@@ -15,7 +15,7 @@ class ListScheduleRequests extends ListRecords
 {
     protected static string $resource = ScheduleRequestResource::class;
 
-    public string $filtroAtual = 'todos';
+    public string $filtroAtual = 'meus';
 
     protected function getCounts(): array
     {

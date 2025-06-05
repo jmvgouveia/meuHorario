@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 
+use Filament\Forms\Components\Select;
+
 class TimeReductionResource extends Resource
 {
     protected static ?string $model = TimeReduction::class;
@@ -40,11 +42,18 @@ class TimeReductionResource extends Resource
                     ->maxLength(255)
                     ->helperText('Informe a descrição'),
                 TextInput::make('time_reduction_value')
-                    ->label('Valor da Redução')
+                    ->label('Valor da Redução Letiva')
                     ->required()
-                    ->maxLength(255)
+                    ->maxLength(11)
                     ->placeholder('1 hora')
                     ->helperText('Informe o valor da redução em horas'),
+               TextInput::make('time_reduction_value_nl')
+                    ->label('Valor da Redução Não Letiva')
+                    ->required()
+                    ->maxLength(11)
+                    ->placeholder('1 hora')
+                    ->helperText('Informe o valor da redução em horas'),
+                
             ]);
     }
 
@@ -65,7 +74,12 @@ class TimeReductionResource extends Resource
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('time_reduction_value')
-                    ->label('Valor da Redução')
+                    ->label('Redução Letiva')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('time_reduction_value_nl')
+                    ->label('Redução Não Letiva')
                     ->sortable()
                     ->searchable()
                     ->toggleable(),

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('time_reduction');
             $table->string('time_reduction_description');
             $table->integer('time_reduction_value');
+            $table->integer('time_reduction_value_nl'); // 'fixed' or 'percentage'
             $table->timestamps();
         });
     }

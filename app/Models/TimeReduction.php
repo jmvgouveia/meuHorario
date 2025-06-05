@@ -11,7 +11,8 @@ class TimeReduction extends Model
     protected $fillable = [
        'time_reduction',
        'time_reduction_description',
-       'time_reduction_value'
+       'time_reduction_value',
+       'time_reduction_value_nl' // 'fixed' or 'percentage'
     ];
 
 
