@@ -85,6 +85,10 @@ class Teacher extends Model
             ->withPivot('id_schoolyear');
     }
 
+public function teacherPositions()
+{
+    return $this->hasMany(TeacherPosition::class);
+}
 
 
     // // relacão de muitos para muitos

@@ -12,7 +12,8 @@ class TimeReduction extends Model
        'time_reduction',
        'time_reduction_description',
        'time_reduction_value',
-       'time_reduction_value_nl' // 'fixed' or 'percentage'
+       'time_reduction_value_nl',
+       'eligibility' 
     ];
 
 

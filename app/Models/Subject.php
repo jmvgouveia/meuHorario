@@ -11,6 +11,8 @@ class Subject extends Model
     protected $fillable = [
         'subject',
         'acronym',
+        'type',
+
 
     ];
 

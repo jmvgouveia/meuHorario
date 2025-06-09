@@ -47,6 +47,15 @@ class SubjectResource extends Resource
                     ->maxLength(255)
                     ->placeholder('Descrição')
                     ->helperText('Informe a descrição'),
+
+                Select::make('type')
+                    ->label('Tipo')
+                    ->options([
+                        'Letiva' => 'Letiva',
+                        'Não Letiva' => 'Não Letiva',
+                                            ])
+                    ->default('Letiva')
+                    ->helperText('Selecione o tipo de disciplina'),
                 // Section::make('Professor(s)')->schema([
                 //     Select::make('teachers')
                 //         ->label('Professor(es)')
@@ -70,6 +79,10 @@ class SubjectResource extends Resource
                     ->searchable(),
                 TextColumn::make('acronym')
                     ->label('Sigla')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('type')
+                    ->label('Tipo')
                     ->sortable()
                     ->searchable(),
                 // TextColumn::make('teachers_count')

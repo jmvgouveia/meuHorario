@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('positions', function (Blueprint $table) {
             $table->id();
             $table->string('position');
+            $table->string('position_description')->nullable();
+            $table->integer('position_reduction_value');
+            $table->integer('position_reduction_value_nl'); 
             $table->timestamps();
         });
     }

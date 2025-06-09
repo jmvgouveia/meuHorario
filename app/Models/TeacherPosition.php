@@ -7,13 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
-class Position extends Model
+class TeacherPosition extends Model
 {
     protected $fillable = [
-       'position',
-       'position_description',
-       'position_reduction_value',
-       'position_reduction_value_nl',
+    'id_teacher',
+    'id_position',
 
     ];
 
@@ -22,10 +20,13 @@ class Position extends Model
     //     return $this->belongsTo(Teacher::class);
     // }
 
-    public function teacher(): HasMany
+    public function teacher(): BelongsTo
+{
+    return $this->belongsTo(Teacher::class, 'id_teacher');
+}
+    public function position(): BelongsTo
     {
-        return $this->hasMany(Teacher::class);
+        return $this->belongsTo(Position::class, 'id_position');
     }
-
 
 }

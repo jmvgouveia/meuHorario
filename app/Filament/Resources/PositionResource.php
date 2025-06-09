@@ -39,6 +39,28 @@ class PositionResource extends Resource
                     ->required()
                     ->placeholder('Cargo')
                     ->helperText('Informe o cargo'),
+
+                TextInput::make('position_description')
+                    ->label('Descrição')
+                    ->required()
+                    ->maxLength(255)
+                    ->placeholder('Descrição')
+                    ->helperText('Informe a descrição do cargo'),
+
+                TextInput::make('position_reduction_value')
+                    ->label('Valor da Redução Letiva')
+                    ->required()
+                    ->maxLength(11)
+                    ->placeholder('1 hora')
+                    ->helperText('Informe o valor da redução em horas'),
+                TextInput::make('position_reduction_value_nl')
+                    ->label('Valor da Redução Não Letiva')
+                    ->required()
+                    ->maxLength(11)
+                    ->placeholder('1 hora')
+                    ->helperText('Informe o valor da redução em horas'),
+
+                
             ]);
     }
 
@@ -51,12 +73,27 @@ class PositionResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
+                TextColumn::make('position_description')
+                    ->label('Descrição')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('position_reduction_value')
+                    ->label('Valor da Redução Letiva')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+                TextColumn::make('position_reduction_value_nl')
+                    ->label('Valor da Redução Não Letiva')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+               // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

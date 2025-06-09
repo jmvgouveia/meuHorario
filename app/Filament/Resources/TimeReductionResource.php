@@ -53,6 +53,15 @@ class TimeReductionResource extends Resource
                     ->maxLength(11)
                     ->placeholder('1 hora')
                     ->helperText('Informe o valor da redução em horas'),
+                Select::make('eligibility')
+                    ->label('Elegibilidade')
+                    ->options([
+                        'Ambos' => 'Ambos',
+                        'Masculino' => 'Masculino',
+                        'Feminino' => 'Feminino',
+                    ])
+                   //->default('Sim')
+                    ->helperText('Selecione se a redução é elegível para professores'),
                 
             ]);
     }
@@ -83,6 +92,17 @@ class TimeReductionResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
+                TextColumn::make('eligibility') 
+                    ->label('Elegibilidade')
+                    ->badge()
+    ->color(fn (string $state): string => match (strtolower($state)) {
+       'feminino' => 'danger',     // vermelho (ou usa 'purple' para algo mais suave)
+    'masculino' => 'info',   // azul
+    'ambos' => 'gray', // azul claro
+    })
+
+                    ->sortable(),
+                    
 
             ])
             ->filters([
