@@ -95,7 +95,7 @@ class TeacherHourCounterResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('carga_horaria')
-                    ->label('Carga Horária')
+                    ->label('Carga Restante')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('carga_componente_letiva')

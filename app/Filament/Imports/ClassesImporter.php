@@ -23,6 +23,9 @@ class ClassesImporter extends Importer
             ImportColumn::make('id_course')
                 ->label('ID do Curso')
                 ->rules(['required', 'int']),
+            ImportColumn::make('year')
+                ->label('Ano')
+                ->rules(['nullable', 'int']),
         ];
     }
 
@@ -43,6 +46,7 @@ class ClassesImporter extends Importer
             $record->fill([
                 'class' => $data['class'],
                 'id_course' => $data['id_course'],
+                'year' => $data['year'] ?? null,
             ]);
 
             $record->save();

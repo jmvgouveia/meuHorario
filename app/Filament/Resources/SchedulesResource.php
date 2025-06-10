@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+
 use App\Filament\Resources\SchedulesResource\Pages;
 use App\Filament\Resources\SchedulesResource\RelationManagers;
 use App\Models\Building;
@@ -15,12 +16,14 @@ use App\Models\SchoolYears;
 use App\Models\Teacher;
 use App\Models\Registration;
 use App\Models\Student;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use Dom\Text;
 use Faker\Core\Color;
 use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -43,10 +46,11 @@ use Filament\Forms\Components\MultiSelect;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Actions as ActionGroup;
 
-use Filament\Forms\Components\Actions\Action;
+
 
 use Filament\Tables\Actions\DeleteAction;
-
+use Filament\Tables\Actions\BulkAction;
+use Illuminate\Support\Collection;
 
 
 
@@ -82,7 +86,47 @@ class SchedulesResource extends Resource
     // }
 
 
+    public static function exportSchedules(?Collection $records = null): StreamedResponse
+    {
+        $schedules = $records ?? \App\Models\Schedules::with(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes'])->get();
 
+
+        $now = now()->format('Y-m-d_H-i'); // Formato: 2025-06-10_14-30
+        $filename = "horarios-{$now}.txt";
+
+        return response()->streamDownload(function () use ($schedules) {
+            $handle = fopen('php://output', 'w');
+
+            foreach ($schedules as $schedule) {
+                $turmas = $schedule->classes->pluck('class')->implode(', ');
+                $ano = optional($schedule->classes->first())->year ?? '-';
+                $profProcesso = $schedule->teacher->teachernumber ?? '';
+                $abreviatura = $schedule->subject->acronym ?? '';
+                $sala = $schedule->room->name ?? '';
+                $turno = $schedule->turno ?? '';
+
+
+                $linha = [
+                    $schedule->id_weekday,                       // 1. Dia da Semana
+                    $schedule->id_timeperiod,                    // 2. Ordem do Período
+                    "\"$turmas\"",                               // 3. Nome da(s) Turma(s)
+                    $ano,                                        // 4. Ano da Turma
+                    "\"$profProcesso\"",                         // 5. Nº Processo do Docente
+                    "\"$abreviatura\"",                          // 6. Abreviatura Disciplina
+                    "\"$sala\"",                                 // 7. Sala de Aula
+                    "\"$turno\"",                                // 8. Turno
+
+                ];
+
+                fputs($handle, implode('|', $linha) . "\n");
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/plain',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
 
     // Filtrar os horários para mostrar apenas os do professor autenticado
     public static function getEloquentQuery(): Builder
@@ -211,6 +255,8 @@ class SchedulesResource extends Resource
                             ->multiple()
                             ->helperText('Selecione a(s) turma(s) que vão assistir à aula')
                             ->reactive()
+                            ->required(fn(callable $get) => optional(\App\Models\Room::find($get('id_room')))->name !== 'Reunião')
+
                             // ->default(fn(?Schedule $record) => $record?->classes()->pluck('id')->toArray())
                             ->afterStateHydrated(function (callable $set, ?Schedules $record) {
                                 $set('id_classes', $record?->classes()->pluck('classes.id')->toArray());
@@ -290,7 +336,7 @@ class SchedulesResource extends Resource
                             ->label('Turno')
                             ->reactive()
                             ->required(fn(callable $get) => !empty($get('students')))
-                            ->default('NA')
+                            //->default('NA')
                             ->options(function (callable $get) {
                                 $alunoIds = $get('students') ?? [];
 
@@ -441,6 +487,9 @@ class SchedulesResource extends Resource
                         ]);
                     }),
             ])
+
+
+
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
                     ->after(function ($records) {
@@ -464,6 +513,11 @@ class SchedulesResource extends Resource
                             }
                         }
                     }),
+
+                BulkAction::make('exportar_selecionados')
+                    ->label('Exportar Selecionados (.txt)')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(fn(Collection $records) => self::exportSchedules($records))
             ]);
     }
 

@@ -36,7 +36,6 @@ class CreateSchedules extends CreateRecord
     public ?Schedules $conflictingSchedule = null;
     use InteractsWithActions;
 
-
     //preencher automaticamente ano letivo e professor
     protected function mutateFormDataBeforeCreate(array $data): array
     {
@@ -55,93 +54,89 @@ class CreateSchedules extends CreateRecord
         return $data;
     }
 
-    //Intercepta tentativa de criação para verificar conflito
     protected function beforeCreate(): void
     {
         $data = $this->form->getState();
 
-        $this->conflictingSchedule = Schedules::with('teacher', 'room')
-            ->where('id_room', $data['id_room'])
-            ->where('id_weekday', $data['id_weekday'])
-            ->where('id_timeperiod', $data['id_timeperiod'])
-            ->first();
+        $sala = \App\Models\Room::find($data['id_room']);
+        $nomeSala = strtolower($sala->name ?? '');
 
-        if ($this->conflictingSchedule) {
-            logger('Conflito de horário detectado');
+        if ($nomeSala !== 'reunião') {
+            $this->conflictingSchedule = Schedules::with('teacher', 'room')
+                ->where('id_room', $data['id_room'])
+                ->where('id_weekday', $data['id_weekday'])
+                ->where('id_timeperiod', $data['id_timeperiod'])
+                ->first();
 
-            $prof = $this->conflictingSchedule->teacher->name ?? 'outro professor';
+            if ($this->conflictingSchedule) {
+                logger('Conflito de horário detectado');
 
+                $prof = $this->conflictingSchedule->teacher->name ?? 'outro professor';
 
-            Notification::make()
-                ->title('Conflito de horário detetado')
-                ->body("Já existe um agendamento para esta sala com $prof")
-                ->warning()
-                ->persistent()
-
-                ->send();
-
-            throw new Halt('Erro ao criar agendamento. Conflito detectado.');
-        } else {
-
-
-            // 🔎 Validação da carga horária
-            $teacher = Teacher::where('id_user', Filament::auth()->id())->first();
-            logger('Professor encontrado', ['id_user' => Filament::auth()->id(), 'teacher' => $teacher]);
-            $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacher->id)->first();
-            logger('Contador de horas encontrado', ['id_teacher' => $teacher->id, 'counter' => $counter]);
-            $subject = \App\Models\Subject::find($data['id_subject']);
-            logger('Disciplina encontrada', ['id_subject' => $data['id_subject'], 'subject' => $subject]);
-            $tipo = strtolower($subject->type ?? 'letiva');
-            logger('Tipo de disciplina', ['tipo' => $tipo]);
-
-
-            if (!$counter) {
                 Notification::make()
                     ->title('Conflito de horário detetado')
-                    ->body("Contador de horas não encontrado para o professor")
+                    ->body("Já existe um agendamento para esta sala com $prof")
                     ->warning()
                     ->persistent()
-
                     ->send();
-                throw new Halt('Contador de horas não encontrado para o professor.');
+
+                throw new Halt('Erro ao criar agendamento. Conflito detectado.');
             }
-
-            if ($tipo === 'nao letiva') {
-                if ($counter->carga_componente_naoletiva <= 0) {
-
-
-                    Notification::make()
-                        ->title('Sem horas disponíveis')
-                        ->body('Sem horas disponíveis na componente **não letiva**.')
-                        ->warning()
-                        ->persistent()
-
-                        ->send();
-
-                    throw new Halt('Sem horas disponíveis na componente **não letiva**.');
-                }
-            } else {
-                if ($counter->carga_componente_letiva <= 0) {
-
-                    Notification::make()
-                        ->title('Sem horas disponíveis')
-                        ->body('Sem horas disponíveis na componente **letiva**.')
-                        ->warning()
-                        ->persistent()
-
-                        ->send();
-                    throw new Halt('Sem horas disponíveis na componente **letiva**.');
-                }
-            }
-
-
-            // Se não há conflito, marca como aprovado
-            $this->form->fill([
-                'status' => 'Aprovado',  // Ajusta para o campo correto e valor adequado
-            ]);
         }
-    }
 
+        // 🔎 Validação da carga horária
+        $teacher = Teacher::where('id_user', Filament::auth()->id())->first();
+        logger('Professor encontrado', ['id_user' => Filament::auth()->id(), 'teacher' => $teacher]);
+
+        $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacher->id)->first();
+        logger('Contador de horas encontrado', ['id_teacher' => $teacher->id, 'counter' => $counter]);
+
+        $subject = \App\Models\Subject::find($data['id_subject']);
+        logger('Disciplina encontrada', ['id_subject' => $data['id_subject'], 'subject' => $subject]);
+
+        $tipo = strtolower($subject->type ?? 'letiva');
+        logger('Tipo de disciplina', ['tipo' => $tipo]);
+
+        if (!$counter) {
+            Notification::make()
+                ->title('Conflito de horário detetado')
+                ->body("Contador de horas não encontrado para o professor")
+                ->warning()
+                ->persistent()
+                ->send();
+
+            throw new Halt('Contador de horas não encontrado para o professor.');
+        }
+
+        if ($tipo === 'nao letiva') {
+            if ($counter->carga_componente_naoletiva <= 0) {
+                Notification::make()
+                    ->title('Sem horas disponíveis')
+                    ->body('Sem horas disponíveis na componente **não letiva**.')
+                    ->warning()
+                    ->persistent()
+                    ->send();
+
+                throw new Halt('Sem horas disponíveis na componente **não letiva**.');
+            }
+        } else {
+            if ($counter->carga_componente_letiva <= 0) {
+                Notification::make()
+                    ->title('Sem horas disponíveis')
+                    ->body('Sem horas disponíveis na componente **letiva**.')
+                    ->warning()
+                    ->persistent()
+                    ->send();
+
+                throw new Halt('Sem horas disponíveis na componente **letiva**.');
+            }
+        }
+
+        // Marca como aprovado
+        $this->form->fill([
+            'status' => 'Aprovado',
+        ]);
+    }
 
     public function submitJustification(array $data)
     {
@@ -181,61 +176,6 @@ class CreateSchedules extends CreateRecord
             ->send();
     }
 
-
-
-
-    // public function onSolicitarTrocaClicado()
-    // {
-    //     logger('Botão de solicitar troca foi clicado.');
-
-
-    //     $data = $this->form->getState();
-
-    //     $teacher = Teacher::where('id_user', Filament::auth()->id())->first();
-    //     $prof = $this->conflictingSchedule->teacher->name ?? 'outro professor';
-    //     $activeYear = SchoolYears::where('active', true)->first();
-
-    //     // Atualizar o agendamento com conflito para estado "Pendente"
-    //     //$this->conflictingSchedule->status = 'Pendente';
-    //     //$this->conflictingSchedule->save();
-
-    //     $schedule = Schedules::create([
-    //         'id_room' => $this->conflictingSchedule->id_room,
-    //         'id_weekday' => $this->conflictingSchedule->id_weekday,
-    //         'id_timeperiod' => $this->conflictingSchedule->id_timeperiod,
-    //         'id_teacher' => $teacher?->id,
-    //         'id_subject' => $data['id_subject'],
-    //         'turno' => $data['turno'],
-    //         'id_schoolyear' => $activeYear?->id,
-    //         'status' => 'Pendente', // ou outro estado apropriado
-    //     ]);
-
-
-    //     // Criar pedido de troca
-    //     $scheduleRequest = ScheduleRequest::create([
-    //         'id_schedule_conflict' => $this->conflictingSchedule->id,
-    //         'id_teacher_requester' => $teacher?->id,
-    //         'id_schedule_novo' => $schedule->id,
-    //         'justification' => 'Conflito detetado automaticamente.',
-    //         'status' => 'Pendente',
-    //     ]);
-
-    //     Notification::make()
-    //         ->title('Pedido de troca criado')
-    //         ->body("Foi criado um pedido de troca pendente para o conflito com $prof.")
-    //         ->success()
-    //         ->actions([
-    //             NotificationAction::make('verPedido')
-    //                 ->label('Ver pedido')
-    //                 ->button()
-    //                 ->color('warning')
-    //             // ->url(route('filament.resources.schedule-requests.edit', ['record' => $scheduleRequest->id])),
-    //         ])
-    //         ->send();
-
-    //     //throw new Halt('Agendamento suspenso devido a pedido de troca pendente.');
-    // }
-
     public function getFormSchema(): array
     {
 
@@ -259,7 +199,6 @@ class CreateSchedules extends CreateRecord
             ]),
         ];
     }
-
 
     protected function afterCreate(): void
     {

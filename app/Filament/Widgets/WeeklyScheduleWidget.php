@@ -38,7 +38,7 @@ class WeeklyScheduleWidget extends Widget
         }
 
         // Busca as marcações aprovadas do professor
-        $schedules = Schedules::with(['room', 'weekday', 'timePeriod', 'subject'])
+        $schedules = Schedules::with(['room', 'weekday', 'timePeriod', 'subject', 'classes'])
             ->where('status', 'Aprovado')
             ->where('id_teacher', $teacher->id)
             ->get();
@@ -68,6 +68,7 @@ class WeeklyScheduleWidget extends Widget
             }
         }
 
+        // Retorna a view com o calendário, dias da semana e períodos de tempo
         return view(static::$view, compact('calendar', 'weekdays', 'timePeriods'));
     }
 }

@@ -17,6 +17,8 @@ class ListSchedules extends ListRecords
                 ->label('Adicionar Aula')
                 // ->icon('heroicon-o-plus')
                 ->color('primary'),
+
+
         ];
     }
 }

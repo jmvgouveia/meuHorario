@@ -39,7 +39,7 @@ class TeacherPositionResource extends Resource
                     ->relationship('position', 'position')
                     ->required()
                     ->reactive(),
-                //
+
             ]);
     }
 

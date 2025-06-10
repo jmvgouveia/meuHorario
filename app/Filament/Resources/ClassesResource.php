@@ -47,6 +47,11 @@ class ClassesResource extends Resource
                     ->placeholder('Escolha o curso')
                     ->required(),
 
+                TextInput::make('year')
+                    ->label('Ano')
+                    ->numeric()
+                    ->placeholder('Introduza o ano'),
+
             ]);
     }
 
@@ -62,6 +67,10 @@ class ClassesResource extends Resource
                 TextColumn::make('course.course')
                     ->label('Curso')
                     ->sortable(),
+                TextColumn::make('year')
+                    ->label('Ano')
+                    ->sortable()
+                    ->searchable(),
 
 
             ])
