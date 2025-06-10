@@ -6,6 +6,9 @@ use App\Filament\Widgets\BuildingsOverview;
 use App\Filament\Widgets\StatsOverview;
 use App\Models\Docente;
 use Filament\Pages\Dashboard as BaseDashboard;
+use App\Filament\Widgets\WeeklyScheduleWidget;
+use App\Filament\Widgets\ResumoWidget;
+
 
 class Dashboard extends BaseDashboard
 {
@@ -14,14 +17,18 @@ class Dashboard extends BaseDashboard
     public function getWidgets(): array
     {
         return [
-            StatsOverview::class,
-            BuildingsOverview::class,
-            Docente::class,
+            WeeklyScheduleWidget::class,
+            ResumoWidget::class,
+            //WeeklyScheduleWidget::class => ['sort' => 1, 'columnSpan' => 'full'],
+            // ResumoWidget::class => ['sort' => 2, 'columnSpan' => 'full'],
+            //    StatsOverview::class,
+            //  BuildingsOverview::class,
+            // Docente::class,
         ];
     }
 
     public function getColumns(): int | array
     {
-        return 2;
+        return 1;
     }
 }

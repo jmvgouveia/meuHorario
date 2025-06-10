@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('time_reduction_description');
             $table->integer('time_reduction_value');
             $table->integer('time_reduction_value_nl'); // 'fixed' or 'percentage'
+            $table->enum('time_reduction_type', ['fixed', 'percentage'])->default('fixed');
             $table->timestamps();
         });
     }
@@ -27,6 +28,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('time_reductions');
-
     }
 };

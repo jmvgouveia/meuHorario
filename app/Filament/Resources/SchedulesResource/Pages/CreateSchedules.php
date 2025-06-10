@@ -20,8 +20,8 @@ use Filament\Forms\Components\Placeholder;
 use Livewire\Component;
 use Filament\Forms;
 use Filament\Forms\Components\Actions as ActionGroup;
-
 use Filament\Forms\Components\Actions\Action;
+use Illuminate\Support\Facades\Log;
 
 
 
@@ -77,23 +77,64 @@ class CreateSchedules extends CreateRecord
                 ->body("Já existe um agendamento para esta sala com $prof")
                 ->warning()
                 ->persistent()
-                // ->actions([
-                //     NotificationAction::make('solicitarTroca')
-                //         ->label('Solicitar troca')
-                //         ->button()
-                //         ->color('warning')
-                //         ->dispatch('botaoSolicitarTrocaClicado'),
 
-                //     NotificationAction::make('cancelar')
-                //         ->label('Cancelar')
-                //         ->button()
-                //         ->color('secondary')
-                //         ->close(),
-                // ])
                 ->send();
 
             throw new Halt('Erro ao criar agendamento. Conflito detectado.');
         } else {
+
+
+            // 🔎 Validação da carga horária
+            $teacher = Teacher::where('id_user', Filament::auth()->id())->first();
+            logger('Professor encontrado', ['id_user' => Filament::auth()->id(), 'teacher' => $teacher]);
+            $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacher->id)->first();
+            logger('Contador de horas encontrado', ['id_teacher' => $teacher->id, 'counter' => $counter]);
+            $subject = \App\Models\Subject::find($data['id_subject']);
+            logger('Disciplina encontrada', ['id_subject' => $data['id_subject'], 'subject' => $subject]);
+            $tipo = strtolower($subject->type ?? 'letiva');
+            logger('Tipo de disciplina', ['tipo' => $tipo]);
+
+
+            if (!$counter) {
+                Notification::make()
+                    ->title('Conflito de horário detetado')
+                    ->body("Contador de horas não encontrado para o professor")
+                    ->warning()
+                    ->persistent()
+
+                    ->send();
+                throw new Halt('Contador de horas não encontrado para o professor.');
+            }
+
+            if ($tipo === 'nao letiva') {
+                if ($counter->carga_componente_naoletiva <= 0) {
+
+
+                    Notification::make()
+                        ->title('Sem horas disponíveis')
+                        ->body('Sem horas disponíveis na componente **não letiva**.')
+                        ->warning()
+                        ->persistent()
+
+                        ->send();
+
+                    throw new Halt('Sem horas disponíveis na componente **não letiva**.');
+                }
+            } else {
+                if ($counter->carga_componente_letiva <= 0) {
+
+                    Notification::make()
+                        ->title('Sem horas disponíveis')
+                        ->body('Sem horas disponíveis na componente **letiva**.')
+                        ->warning()
+                        ->persistent()
+
+                        ->send();
+                    throw new Halt('Sem horas disponíveis na componente **letiva**.');
+                }
+            }
+
+
             // Se não há conflito, marca como aprovado
             $this->form->fill([
                 'status' => 'Aprovado',  // Ajusta para o campo correto e valor adequado
@@ -217,5 +258,44 @@ class CreateSchedules extends CreateRecord
                     ->action(fn(array $data) => $this->submitJustification($data)),
             ]),
         ];
+    }
+
+
+    protected function afterCreate(): void
+    {
+        $record = $this->record;
+        $teacherId = $record->id_teacher;
+        $subject = $record->subject; // via relacionamento 'subject'
+
+        if (!$teacherId || !$subject) {
+            Log::warning('Teacher ou Subject não encontrados ao criar aula.');
+            return;
+        }
+
+        // Exemplo: usar o campo "tipo" na tabela de disciplinas
+        $tipo = strtolower($subject->type ?? 'letiva'); // Assume "letiva" por padrão
+        // dd($tipo);
+        $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacherId)->first();
+
+        if (!$counter) {
+            Log::warning('TeacherHourCounter não encontrado.', ['id_teacher' => $teacherId]);
+            return;
+        }
+
+        if ($tipo === 'nao letiva') {
+            $counter->carga_componente_naoletiva = max(0, $counter->carga_componente_naoletiva - 1);
+        } else {
+            $counter->carga_componente_letiva = max(0, $counter->carga_componente_letiva - 1);
+        }
+
+        $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
+        $counter->save();
+
+        Log::info('Carga horária atualizada após criação da aula.', [
+            'teacher_id' => $teacherId,
+            'tipo' => $tipo,
+            'novo_total_letiva' => $counter->carga_componente_letiva,
+            'novo_total_naoletiva' => $counter->carga_componente_naoletiva,
+        ]);
     }
 }

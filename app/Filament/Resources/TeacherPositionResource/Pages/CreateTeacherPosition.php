@@ -7,36 +7,42 @@ use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use App\Models\TeacherHourCounter;
 use App\Models\TeacherPosition;
+use Illuminate\Support\Facades\Log;
 
 class CreateTeacherPosition extends CreateRecord
 {
-     protected static string $resource = TeacherPositionResource::class;
-//     protected function afterCreate(): void
-// {
-//     $record = $this->record;
-//     $teacher = $record->teacher->load('teacherPositions.position');
+    protected static string $resource = TeacherPositionResource::class;
 
-// //    $teacher = $record->teacher;
+    protected function afterCreate(): void
+    {
 
-//     // Soma total das reduções letiva e não letiva de todos os cargos do professor
-//     $reducaoLetivaTotal = $teacher->teacherPositions->sum(fn ($pos) => $pos->position->reducao_letiva ?? 0);
-//     $reducaoNaoLetivaTotal = $teacher->teacherPositions->sum(fn ($pos) => $pos->position->reducao_naoletiva ?? 0);
+        $record = $this->record;
 
-//     // Carga base
-//     $baseLetiva = 22;
-//     $baseNaoLetiva = 0;
+        $teacherId = $record->id_teacher;
+        $reduction = \App\Models\Position::find($record->id_position); // CORRIGIDO AQUI
 
-//     $novaLetiva = max(0, $baseLetiva - $reducaoLetivaTotal);
-//     $novaNaoLetiva = max(0, $baseNaoLetiva - $reducaoNaoLetivaTotal);
+        if ($teacherId && $reduction) {
+            $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacherId)->first();
 
-//     TeacherHourCounter::updateOrCreate(
-//         ['id_teacher' => $teacher->id],
-//         [
-//             'carga_horaria' => $baseLetiva + $baseNaoLetiva,
-//             'carga_componente_letiva' => $novaLetiva,
-//             'carga_componente_naoletiva' => $novaNaoLetiva,
-//             'autorizado_horas_extra' => 'nao_autorizado',
-//         ]
-//     );
-// }
+            if ($counter) {
+                $valorLetiva = floatval($reduction->position_reduction_value ?? 0);
+                $valorNaoLetiva = floatval($reduction->position_reduction_value_nl ?? 0);
+
+                $novaLetiva = max(0, $counter->carga_componente_letiva - $valorLetiva);
+                $novaNaoLetiva = max(0, $counter->carga_componente_naoletiva - $valorNaoLetiva);
+
+                $counter->carga_componente_letiva = $novaLetiva;
+                $counter->carga_componente_naoletiva = $novaNaoLetiva;
+                $counter->carga_horaria = $novaLetiva + $novaNaoLetiva;
+
+                $counter->save();
+
+                Log::info('Counter atualizado com sucesso.');
+            } else {
+                Log::warning('Contador não encontrado para o professor.');
+            }
+        } else {
+            Log::warning('Dados insuficientes para processar redução.');
+        }
+    }
 }

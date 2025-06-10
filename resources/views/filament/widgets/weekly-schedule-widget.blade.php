@@ -31,6 +31,9 @@
                     Sala: {{ $schedule->room->name ?? '-' }}
                 </div>
                 <div class="text-xs text-gray-600 dark:text-gray-400">
+                    Turma: {{ $schedule->Class ?? '-' }}
+                </div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">
                     Turno: {{ $schedule->turno ?? '-' }}
                 </div>
                 @else

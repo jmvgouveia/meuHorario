@@ -43,23 +43,6 @@ class AdminPanelProvider extends PanelProvider
             ])
 
             // ---          Acesso ao painel por perfil
-            // ->navigationItems([
-            //     NavigationItem::make('Permissões')
-            //         ->url(fn() => route('filament.admin.resources.permissions.index'))
-            //         ->icon('heroicon-o-key')
-            //         ->visible(fn() => Auth::check() && Auth::user()?->hasRole('admin')),
-
-            //     NavigationItem::make('Papeis')
-            //         ->url(fn() => route('filament.admin.resources.roles.index'))
-            //         ->icon('heroicon-o-shield-check')
-            //         ->visible(fn() => Auth::check() && Auth::user()?->hasRole('admin')),
-
-            //     // NavigationItem::make('Horários')
-            //     //     ->url(fn() => route('filament.admin.resources.schedules.index'))
-            //     //     ->icon('heroicon-o-calendar')
-            //     //     ->visible(fn() => auth()->user()?->can('ver_horarios')),
-
-
 
 
 
@@ -69,10 +52,10 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            ->widgets([
-                StatsOverview::class,
-                BuildingsOverview::class,
-            ])
+            // ->widgets([
+            //     StatsOverview::class,
+            //     BuildingsOverview::class,
+            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

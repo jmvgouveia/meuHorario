@@ -10,12 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class TeacherHourCounter extends Model
 {
     protected $fillable = [
-    'id_teacher',
-    'carga_horaria',
-    'carga_componente_letiva',
-    'carga_componente_naoletiva',
-    'autorizado_horas_extra',
-    'autorizado_horas_extra',
+        'id_teacher',
+        'carga_horaria',
+        'carga_componente_letiva',
+        'carga_componente_naoletiva',
+        'autorizado_horas_extra',
 
     ];
 
@@ -25,9 +24,7 @@ class TeacherHourCounter extends Model
     // }
 
     public function teacher(): BelongsTo
-{
-    return $this->belongsTo(Teacher::class, 'id_teacher');
-}
- 
-
+    {
+        return $this->belongsTo(Teacher::class, 'id_teacher');
+    }
 }

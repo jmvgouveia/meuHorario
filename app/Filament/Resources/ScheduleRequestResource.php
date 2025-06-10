@@ -62,37 +62,14 @@ class ScheduleRequestResource extends Resource
 
             ->schema([
 
-
-
-
-
-
-
-
-
-
                 Textarea::make('justification')
                     ->label('Justificação do Pedido')
                     ->disabled()
-                    ->columnSpan('full'),  // campo full width
-
-
-
-                // Textarea::make('response')
-                //     ->label('Resposta do Professor')
-                //     ->reactive()
-                //     ->columnSpan('full'),
-
-                /* ->visible(fn($record) => $record->status === 'recusado' || $record->status === 'aprovado_prof')
-                    ->required(fn($record) => $record->status === 'recusado') */
+                    ->columnSpan('full'),
                 Textarea::make('status')
                     ->label('Estado do Pedido')
-                    //->sortable()
+
                     ->disabled(),
-                // Select::make('status')
-                //     ->label('Estado do Pedido')
-
-
 
             ]);
     }

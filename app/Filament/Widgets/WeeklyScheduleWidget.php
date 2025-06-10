@@ -18,7 +18,7 @@ class WeeklyScheduleWidget extends Widget
 
     protected int | string | array $columnSpan = [
         'sm' => 12,
-        'md' => 6,
+        'md' => 12,
         'lg' => 'full',
     ];
 

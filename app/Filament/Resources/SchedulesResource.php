@@ -45,6 +45,8 @@ use Filament\Forms\Components\Actions as ActionGroup;
 
 use Filament\Forms\Components\Actions\Action;
 
+use Filament\Tables\Actions\DeleteAction;
+
 
 
 
@@ -317,6 +319,7 @@ class SchedulesResource extends Resource
 
 
                     ]),
+
                 ActionGroup::make([
                     Action::make('justificarConflito')
                         ->label('Solicitar Troca de Horário')
@@ -402,12 +405,65 @@ class SchedulesResource extends Resource
                 //
             ])
             ->actions([
-                //   Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->after(function ($record) {
+                        Log::info('*** AFTER DELETE acionado para eliminacao de aula', ['id' => $record->id]);
+
+                        $record->load('subject');
+                        Log::info('Subject associado:', ['subject' => $record->subject]);
+
+                        $tipoDisciplina = strtolower(trim($record->subject->type ?? ''));
+                        Log::info('Tipo recebido no record', ['tipo' => $tipoDisciplina]);
+
+                        Log::info('Tipo recebido no record', ['tipo' => $tipoDisciplina]);
+
+                        $counter = \App\Models\TeacherHourCounter::where('id_teacher', $record->id_teacher)->first();
+
+                        if (!$counter) {
+                            Log::warning('Counter não encontrado para professor.', ['id_teacher' => $record->id_teacher]);
+                            return;
+                        }
+
+                        if ($tipoDisciplina === 'nao letiva') {
+                            $counter->carga_componente_naoletiva = max(2, $counter->carga_componente_naoletiva + 1);
+                            $componente = 'Não Letiva';
+                        } else {
+                            $counter->carga_componente_letiva = max(0, $counter->carga_componente_letiva + 1);
+                            $componente = 'Letiva';
+                        }
+
+                        $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
+                        $counter->save();
+
+                        Log::info('Carga horária reposta após exclusão.', [
+                            'id_teacher' => $record->id_teacher,
+                            'componente' => $componente,
+                        ]);
+                    }),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->after(function ($records) {
+                        foreach ($records as $record) {
+                            //$record->load('timeReduction');
+
+                            $reduction = $record->position;
+                            $counter = \App\Models\TeacherHourCounter::where('id_teacher', $record->id_teacher)->first();
+
+                            if ($reduction && $counter) {
+                                $valorLetiva = floatval($reduction->position_reduction_value ?? 0);
+                                $valorNaoLetiva = floatval($reduction->position_reduction_value_nl ?? 0);
+
+                                $novaLetiva = $counter->carga_componente_letiva + $valorLetiva;
+                                $novaNaoLetiva = $counter->carga_componente_naoletiva + $valorNaoLetiva;
+
+                                $counter->carga_componente_letiva = $novaLetiva;
+                                $counter->carga_componente_naoletiva = $novaNaoLetiva;
+                                $counter->carga_horaria = $novaLetiva + $novaNaoLetiva;
+                                $counter->save();
+                            }
+                        }
+                    }),
             ]);
     }
 
