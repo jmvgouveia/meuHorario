@@ -28,7 +28,9 @@ use App\Filament\Resources\RoleResource;
 use Filament\Navigation\NavigationItem;
 use Illuminate\Support\Facades\Auth;
 use App\Filament\Resources\SchedulesResource;
-
+use App\Filament\Widgets\DocentesOverview;
+use App\Filament\Widgets\StudentsOverview;
+use App\Models\Student;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -53,9 +55,11 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             // ->widgets([
-            //     StatsOverview::class,
-            //     BuildingsOverview::class,
-            // ])
+            //     // StatsOverview::class,
+            //     // BuildingsOverview::class,
+            //     // DocentesOverview::class,
+            //     // StudentsOverview::class,
+            // ])   
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

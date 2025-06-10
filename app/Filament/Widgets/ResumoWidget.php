@@ -42,37 +42,43 @@ class ResumoWidget extends Widget
         $letivaDisponivel = $counter?->carga_componente_letiva ?? 0;
         $naoLetivaDisponivel = $counter?->carga_componente_naoletiva ?? 0;
 
-        // Cálculo de aulas
+        // Aulas
         $aulasLetivas = $schedules->filter(fn($s) => strtolower($s->subject->type ?? '') === 'letiva')->count();
         $aulasNaoLetivas = $schedules->filter(fn($s) => strtolower($s->subject->type ?? '') === 'nao letiva')->count();
 
-        // Cargos
+        // Cargos com redução
         $cargos = TeacherPosition::with('position')
             ->where('id_teacher', $teacher->id)
             ->get()
             ->map(function ($cargo) {
                 return [
                     'nome' => $cargo->position->position,
+                    'descricao' => $cargo->position->position_description ?? 'Cargo sem descrição',
                     'redução_letiva' => $cargo->position->position_reduction_value ?? 0,
                     'redução_naoletiva' => $cargo->position->position_reduction_value_nl ?? 0,
                 ];
             })->toArray();
 
         // Reduções por tempo de serviço
-        $reducoesTempo = TimeReductionTeachers::with('timeReduction')
+        $tempoReducoes = TimeReductionTeachers::with('timeReduction')
             ->where('id_teacher', $teacher->id)
-            ->get();
-
-        $totalReducoesTempo = $reducoesTempo->sum(fn($r) => $r->timeReduction->reduction_value ?? 0);
-        // Montar resumo
+            ->get()
+            ->map(function ($reducao) {
+                return [
+                    'nome' => $reducao->timeReduction->time_reduction ?? 'Redução sem nome',
+                    'descricao' => $reducao->timeReduction->time_reduction_description ?? 'Redução sem descrição',
+                    'valor' => $reducao->timeReduction->time_reduction_value ?? 0,
+                    'valor_nao_letivo' => $reducao->timeReduction->time_reduction_value_nl ?? 0,
+                ];
+            })->toArray();
+        // dd($cargos, $tempoReducoes);
         $resumo = [
             'letiva' => $aulasLetivas,
             'nao_letiva' => $aulasNaoLetivas,
             'disponivel_letiva' => max(0, $letivaDisponivel),
             'disponivel_naoletiva' => max(0, $naoLetivaDisponivel),
             'cargos' => $cargos,
-            'reducoes' => $totalReducoesTempo,
-
+            'tempo_reducoes' => $tempoReducoes,
         ];
 
         return view(static::$view, compact('resumo'));

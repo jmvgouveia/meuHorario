@@ -19,6 +19,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\WeeklyScheduleWidget;
 use App\Filament\Widgets\ResumoWidget;
+use App\Filament\Widgets\StatsOverview;
 
 class HorariosPanelProvider extends PanelProvider
 {
@@ -41,6 +42,7 @@ class HorariosPanelProvider extends PanelProvider
             ->widgets([
                 WeeklyScheduleWidget::class,
                 ResumoWidget::class,
+
 
                 // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,

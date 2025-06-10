@@ -10,6 +10,7 @@ use App\Filament\Widgets\WeeklyScheduleWidget;
 use App\Filament\Widgets\ResumoWidget;
 
 
+
 class Dashboard extends BaseDashboard
 {
     protected static ?string $navigationIcon = 'heroicon-o-home';
@@ -19,9 +20,8 @@ class Dashboard extends BaseDashboard
         return [
             WeeklyScheduleWidget::class,
             ResumoWidget::class,
-            //WeeklyScheduleWidget::class => ['sort' => 1, 'columnSpan' => 'full'],
-            // ResumoWidget::class => ['sort' => 2, 'columnSpan' => 'full'],
             //    StatsOverview::class,
+            //   StatsOverview::class,
             //  BuildingsOverview::class,
             // Docente::class,
         ];

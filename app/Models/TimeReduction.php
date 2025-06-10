@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class TimeReduction extends Model
 {
     protected $fillable = [
-       'time_reduction',
-       'time_reduction_description',
-       'time_reduction_value',
-       'time_reduction_value_nl',
-       'eligibility' 
+        'time_reduction',
+        'time_reduction_description',
+        'time_reduction_value',
+        'time_reduction_value_nl',
+        'eligibility'
     ];
 
 
@@ -22,5 +22,8 @@ class TimeReduction extends Model
         return $this->hasMany(Teacher::class);
     }
 
-
+    public function timeReduction(): BelongsTo
+    {
+        return $this->belongsTo(TimeReduction::class, 'id_time_reduction');
+    }
 }
