@@ -20,4 +20,8 @@ class Student extends Model
     {
         return $this->belongsTo(Gender::class, 'id_gender');
     }
+    public function registrations()
+    {
+        return $this->hasMany(\App\Models\Registration::class, 'id_student', 'id');
+    }
 }

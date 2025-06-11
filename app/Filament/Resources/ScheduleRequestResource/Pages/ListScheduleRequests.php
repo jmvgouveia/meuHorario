@@ -60,10 +60,6 @@ class ListScheduleRequests extends ListRecords
         $counts = $this->getCounts();
 
         return [
-            // Action::make('todos')
-            //     ->label('Todos Pedidos (' . $counts['todos'] . ')')
-            //     ->action(fn() => $this->filtroAtual = 'todos')
-            //     ->color(fn() => $this->filtroAtual === 'todos' ? 'primary' : 'gray'),
 
             Action::make('meus')
                 ->label(fn() => 'Meus Pedidos (' . $counts['meus'] . ')')

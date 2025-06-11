@@ -23,7 +23,7 @@ class Registration extends Model
 
     public function class(): BelongsTo
     {
-        return $this->belongsTo(Classes::class, 'id_class');
+        return $this->belongsTo(Classes::class, 'id_class', 'id');
     }
 
     public function schoolyear(): BelongsTo

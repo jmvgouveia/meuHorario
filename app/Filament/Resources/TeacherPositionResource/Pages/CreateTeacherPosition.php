@@ -14,6 +14,7 @@ use Filament\Support\Exceptions\Halt;
 class CreateTeacherPosition extends CreateRecord
 {
     protected static string $resource = TeacherPositionResource::class;
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $position = \App\Models\Position::find($data['id_position']);
@@ -51,6 +52,26 @@ class CreateTeacherPosition extends CreateRecord
         // $counter->save();
 
         return $data;
+    }
+
+    protected function beforeCreate(): void
+    {
+        $data = $this->form->getState();
+
+        $jaTemCargo = \App\Models\TeacherPosition::where('id_teacher', $data['id_teacher'])
+            ->where('id_position', $data['id_position'])
+            ->exists();
+
+        if ($jaTemCargo) {
+            Notification::make()
+                ->title('Cargo duplicado')
+                ->body('Este professor já tem este cargo atribuído.')
+                ->danger()
+                ->persistent()
+                ->send();
+
+            throw new \Filament\Support\Exceptions\Halt('O professor já possui este cargo.');
+        }
     }
 
     protected function afterCreate(): void

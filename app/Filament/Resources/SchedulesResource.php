@@ -51,6 +51,7 @@ use Filament\Forms\Components\Actions as ActionGroup;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkAction;
 use Illuminate\Support\Collection;
+use Filament\Tables\Actions\BulkAction as TablesBulkAction;
 
 
 
@@ -59,10 +60,7 @@ use Illuminate\Support\Collection;
 class SchedulesResource extends Resource
 {
 
-
-
     protected static ?string $model = Schedules::class;
-
     protected static ?string $navigationGroup = 'Horários';
     protected static ?string $navigationLabel = 'Marcação de Horários';
     protected static ?int $navigationSort = 0;
@@ -70,55 +68,72 @@ class SchedulesResource extends Resource
 
     public ?Schedule $conflictingSchedule = null;
 
-    // public static function canViewAny(): bool
-    // {
-    //     return Auth::user() && Auth::user()->hasPermissionTo('ver_horarios');
-    // }
-
-    // public static function canCreate(): bool
-    // {
-    //     return auth()->user()?->can('editar_horarios');
-    // }
-
-    // public static function canEdit(Model $record): bool
-    // {
-    //     return auth()->user()?->can('editar_horarios');
-    // }
-
 
     public static function exportSchedules(?Collection $records = null): StreamedResponse
     {
-        $schedules = $records ?? \App\Models\Schedules::with(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes'])->get();
+        $schedules = $records ?? \App\Models\Schedules::with(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes', 'students'])->get();
 
-
-        $now = now()->format('Y-m-d_H-i'); // Formato: 2025-06-10_14-30
+        $now = now()->format('Y-m-d_H-i');
         $filename = "horarios-{$now}.txt";
 
         return response()->streamDownload(function () use ($schedules) {
             $handle = fopen('php://output', 'w');
 
             foreach ($schedules as $schedule) {
-                $turmas = $schedule->classes->pluck('class')->implode(', ');
-                $ano = optional($schedule->classes->first())->year ?? '-';
-                $profProcesso = $schedule->teacher->teachernumber ?? '';
-                $abreviatura = $schedule->subject->acronym ?? '';
-                $sala = $schedule->room->name ?? '';
-                $turno = $schedule->turno ?? '';
+                $turmaAlunos = [];
 
+                // Verifica se há alunos selecionados
+                if ($schedule->students->isNotEmpty()) {
+                    foreach ($schedule->students as $student) {
+                        $registration = \App\Models\Registration::where('id_student', $student->id)
+                            ->where('id_schoolyear', $schedule->id_schoolyear)
+                            ->whereIn('id_class', $schedule->classes->pluck('id'))
+                            ->with('class')
+                            ->first();
 
-                $linha = [
-                    $schedule->id_weekday,                       // 1. Dia da Semana
-                    $schedule->id_timeperiod,                    // 2. Ordem do Período
-                    "\"$turmas\"",                               // 3. Nome da(s) Turma(s)
-                    $ano,                                        // 4. Ano da Turma
-                    "\"$profProcesso\"",                         // 5. Nº Processo do Docente
-                    "\"$abreviatura\"",                          // 6. Abreviatura Disciplina
-                    "\"$sala\"",                                 // 7. Sala de Aula
-                    "\"$turno\"",                                // 8. Turno
+                        if ($registration && $registration->class) {
+                            $turmaNome = $registration->class->class;
+                            $turmaAno = $registration->class->year;
 
-                ];
+                            $turmaAlunos[$turmaNome]['ano'] = $turmaAno;
+                            $turmaAlunos[$turmaNome]['alunos'][] = "{$student->studentnumber} - {$student->name}";
+                        }
+                    }
+                } else {
+                    // Se não há alunos, exporta turmas com campo de turno vazio
+                    foreach ($schedule->classes as $class) {
+                        $linha = [
+                            $schedule->id_weekday,
+                            $schedule->id_timeperiod,
+                            "\"{$class->class}\"",
+                            $class->year,
+                            "\"{$schedule->teacher->teachernumber}\"",
+                            "\"{$schedule->subject->acronym}\"",
+                            "\"{$schedule->room->name}\"",
+                            "\"\"", // Turno vazio
+                        ];
 
-                fputs($handle, implode('|', $linha) . "\n");
+                        fputs($handle, implode('|', $linha) . "\n");
+                    }
+
+                    continue; // Passa para o próximo horário
+                }
+
+                // Gera linhas por turma com alunos
+                foreach ($turmaAlunos as $turma => $info) {
+                    $linha = [
+                        $schedule->id_weekday,
+                        $schedule->id_timeperiod,
+                        "\"$turma\"",
+                        $info['ano'],
+                        "\"{$schedule->teacher->teachernumber}\"",
+                        "\"{$schedule->subject->acronym}\"",
+                        "\"{$schedule->room->name}\"",
+                        "\"" . implode(' ; ', $info['alunos']) . "\"",
+                    ];
+
+                    fputs($handle, implode('|', $linha) . "\n");
+                }
             }
 
             fclose($handle);
@@ -144,26 +159,24 @@ class SchedulesResource extends Resource
         return $query;
     }
 
-    public function atualizarEstado($get, $set)
-    {
-        $sala = $get('id_room');
-        $inicio = $get('inicio');
+    // public function atualizarEstado($get, $set)
+    // {
+    //     $sala = $get('id_room');
+    //     $inicio = $get('inicio');
 
-        if (!$sala || !$inicio) {
-            $set('estado', null);
-            return;
-        }
+    //     if (!$sala || !$inicio) {
+    //         $set('estado', null);
+    //         return;
+    //     }
 
-        // Simula uma verificação de conflitos (aqui seria um query real à BD)
-        $conflitos = Schedule::where('room_id', $sala)
-            ->where('start', $inicio)
-            ->exists();
+    //     // Simula uma verificação de conflitos (aqui seria um query real à BD)
+    //     $conflitos = Schedule::where('room_id', $sala)
+    //         ->where('start', $inicio)
+    //         ->exists();
 
-        $estado = $conflitos ? 'ocupado' : 'disponível'; // ou 'em conflito', se houver lógica extra
-        $set('estado', $estado);
-    }
-
-
+    //     $estado = $conflitos ? 'ocupado' : 'disponível'; // ou 'em conflito', se houver lógica extra
+    //     $set('estado', $estado);
+    // }
 
     public static function form(Form $form): Form
     {
@@ -183,19 +196,31 @@ class SchedulesResource extends Resource
                                     ->options(Building::all()->pluck('name', 'id'))
                                     ->reactive()
                                     ->afterStateUpdated(fn(callable $set) => $set('id_room', null))
-                                    ->placeholder('Selecione o local da aula'),
+                                    ->placeholder('Selecione o local da aula')
+                                    ->afterStateHydrated(function (callable $set, ?\App\Models\Schedules $record) {
+                                        if ($record && $record->id_room && $record->room) {
+                                            $set('building_id', $record->room->building_id);
+                                        }
+                                    }),
 
                                 Select::make('id_room')
                                     ->label('Sala')
                                     ->required()
-                                    ->options(function (callable $get) {
-                                        $buildingId = $get('building_id');
+                                    ->options(function (callable $get, ?\App\Models\Schedules $record) {
+                                        $buildingId = $get('building_id') ?? $record?->room?->building_id;
+
                                         if (!$buildingId) return [];
-                                        return Room::where('building_id', $buildingId)->pluck('name', 'id');
+
+                                        return \App\Models\Room::where('building_id', $buildingId)->pluck('name', 'id');
                                     })
                                     ->searchable()
                                     ->placeholder('Selecione a sala')
-                                    ->reactive(),
+                                    ->reactive()
+                                    ->afterStateHydrated(function (callable $set, ?\App\Models\Schedules $record) {
+                                        if ($record && $record->id_room) {
+                                            $set('id_room', $record->id_room);
+                                        }
+                                    }),
                             ]),
                     ]),
 
@@ -216,8 +241,6 @@ class SchedulesResource extends Resource
                                     ->placeholder('Selecione a hora de início')
                                     ->options(TimePeriod::all()->pluck('description', 'id'))
                                     ->reactive(),
-
-
 
                             ]),
                     ]),
@@ -253,35 +276,48 @@ class SchedulesResource extends Resource
                         Select::make('id_classes')
                             ->label('Turmas')
                             ->multiple()
+                            ->required(function (callable $get) {
+                                $subjectId = $get('id_subject');
+                                $subjectName = \App\Models\Subject::find($subjectId)?->subject;
+
+                                return !in_array(strtolower($subjectName), ['reunião', 'tee']);
+                            })
                             ->helperText('Selecione a(s) turma(s) que vão assistir à aula')
                             ->reactive()
-                            ->required(fn(callable $get) => optional(\App\Models\Room::find($get('id_room')))->name !== 'Reunião')
-
-                            // ->default(fn(?Schedule $record) => $record?->classes()->pluck('id')->toArray())
                             ->afterStateHydrated(function (callable $set, ?Schedules $record) {
                                 $set('id_classes', $record?->classes()->pluck('classes.id')->toArray());
                             })
                             ->options(function (callable $get) {
                                 $subjectId = $get('id_subject');
-                                if (!$subjectId) return [];
+                                $buildingId = $get('building_id');
+
+                                if (!$subjectId || !$buildingId) {
+                                    return [];
+                                }
+
                                 $subject = Subject::find($subjectId);
-                                if (!$subject) return [];
-                                $courseIds = $subject->courses()->select('courses.id')->pluck('id');
-                                return Classes::whereIn('id_course', $courseIds)->pluck('class', 'id');
-                            })
-                            ->afterStateUpdated(fn($state, callable $set) => $set('alunos', [])),
+                                if (!$subject) {
+                                    return [];
+                                }
+
+                                // Cursos associados à disciplina
+                                $courseIds = $subject->courses()->pluck('courses.id');
+
+                                // Turmas associadas ao curso e ao edifício
+                                return Classes::whereIn('id_course', $courseIds)
+                                    ->where('id_building', $buildingId) // 👈 filtro pelo prédio da turma
+                                    ->pluck('class', 'id');
+                            }),
 
                         CheckboxList::make('students')
                             ->label('Alunos matriculados na disciplina')
                             ->helperText('Selecione os alunos que vão assistir à aula')
-                            //->default(fn(?Schedule $record) => $record?->students()->pluck('id')->toArray())
-                            // ->afterStateHydrated(function (callable $set, ?Schedules $record) {
-                            //     if ($record) {
-                            //         $ids = $record->students()->pluck('id_student')->toArray(); // ← chave correta da pivot
-                            //         $set('students', $ids);
-                            //     }
-                            // })
                             ->reactive()
+                            ->afterStateHydrated(function (callable $set, ?\App\Models\Schedules $record) {
+                                if ($record) {
+                                    $set('students', $record->students()->pluck('students.id')->toArray());
+                                }
+                            })
                             ->afterStateUpdated(function ($state, callable $set) {
                                 if (!empty($state)) {
                                     $numeros = \App\Models\Student::whereIn('id', $state)
@@ -308,7 +344,7 @@ class SchedulesResource extends Resource
 
                                 if ($registrationIds->isEmpty()) return [];
 
-                                $query = \App\Models\Registration::with('student')
+                                $query = Registration::with('student')
                                     ->whereIn('id', $registrationIds)
                                     ->where('id_schoolyear', $schoolYear->id);
 
@@ -318,20 +354,20 @@ class SchedulesResource extends Resource
 
                                 return $query->get()->mapWithKeys(function ($registration) {
                                     $student = $registration->student;
+                                    $turma = $registration->class?->class;
                                     if (!$student) return [];
 
                                     return [
-                                        $registration->id_student => "{$student->studentnumber} - {$student->name}",
+                                        $registration->id_student => "{$turma} - {$student->studentnumber} - {$student->name}",
                                     ];
                                 });
                             }),
+
                     ]),
 
                 Section::make('Turno (opcional)')
                     ->description('Selecione o turno da turma ')
                     ->schema([
-
-
                         Select::make('turno')
                             ->label('Turno')
                             ->reactive()
@@ -351,8 +387,6 @@ class SchedulesResource extends Resource
                                     return [$alunos => "Turno: $alunos"];
                                 }
 
-
-
                                 return [
                                     'turmaA' => 'Turma A',
                                     'turmaB' => 'Turma B',
@@ -361,9 +395,6 @@ class SchedulesResource extends Resource
                                 ];
                             })
                             ->placeholder('Em caso de ser a turma toda deixar em branco'),
-
-
-
                     ]),
 
                 ActionGroup::make([
@@ -382,37 +413,15 @@ class SchedulesResource extends Resource
                         ])
                         ->action(fn(array $data, $livewire) => $livewire->submitJustification($data)),
                 ]),
+
             ]);
     }
-
-
-
 
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                // TextColumn::make('id')
-                //     ->label('ID')
-                //     ->sortable()
-                //     ->toggleable()
-                //     ->searchable(),
-                // TextColumn::make('teacher.teachernumber')
-                //     ->label('Professor')
-                //     ->sortable()
-                //     ->toggleable()
-                //     ->searchable(),
-                // TextColumn::make('teacher.name')
-                //     ->label('Nome do Professor')
-                //     ->sortable()
-                //     ->toggleable()
-                //     ->searchable(),
-                TextColumn::make('subject.subject')
-                    ->label('Disciplina')
-                    ->sortable()
-                    ->toggleable()
-                    ->searchable(),
                 TextColumn::make('weekday.weekday')
                     ->label('Dia da Semana')
                     ->sortable()
@@ -420,6 +429,16 @@ class SchedulesResource extends Resource
                     ->searchable(),
                 TextColumn::make('timeperiod.description')
                     ->label('Hora da Aula')
+                    ->sortable()
+                    ->toggleable()
+                    ->searchable(),
+                TextColumn::make('subject.subject')
+                    ->label('Disciplina')
+                    ->sortable()
+                    ->toggleable()
+                    ->searchable(),
+                TextColumn::make('classes.class')
+                    ->label('Turma')
                     ->sortable()
                     ->toggleable()
                     ->searchable(),
@@ -450,67 +469,34 @@ class SchedulesResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\DeleteAction::make()
-                    ->after(function ($record) {
-                        Log::info('*** AFTER DELETE acionado para eliminacao de aula', ['id' => $record->id]);
-
-                        $record->load('subject');
-                        Log::info('Subject associado:', ['subject' => $record->subject]);
-
-                        $tipoDisciplina = strtolower(trim($record->subject->type ?? ''));
-                        Log::info('Tipo recebido no record', ['tipo' => $tipoDisciplina]);
-
-                        Log::info('Tipo recebido no record', ['tipo' => $tipoDisciplina]);
-
-                        $counter = \App\Models\TeacherHourCounter::where('id_teacher', $record->id_teacher)->first();
-
-                        if (!$counter) {
-                            Log::warning('Counter não encontrado para professor.', ['id_teacher' => $record->id_teacher]);
-                            return;
-                        }
-
-                        if ($tipoDisciplina === 'nao letiva') {
-                            $counter->carga_componente_naoletiva = max(2, $counter->carga_componente_naoletiva + 1);
-                            $componente = 'Não Letiva';
-                        } else {
-                            $counter->carga_componente_letiva = max(0, $counter->carga_componente_letiva + 1);
-                            $componente = 'Letiva';
-                        }
-
-                        $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
-                        $counter->save();
-
-                        Log::info('Carga horária reposta após exclusão.', [
-                            'id_teacher' => $record->id_teacher,
-                            'componente' => $componente,
-                        ]);
-                    }),
+            ->headerActions([
+                Tables\Actions\Action::make('exportar_selecionados')
+                    ->label('Exportar Horários')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(fn() => self::exportSchedules())
+                    ->color('primary')
+                    ->requiresConfirmation(),
             ])
+            ->actions([
+                DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->after(function ($record) {
+                        SchedulesResource::hoursCounterUpdate($record);
+                    }),
 
+                // Tables\Actions\EditAction::make()
+                //     ->requiresConfirmation()
+                //     ->form(fn(Schedules $record) => SchedulesResource::form(Form::make()->model($record)))
+                //     ->icon('heroicon-o-pencil-square')
+                //     ->color('primary'),
 
+            ])
 
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
-                    ->after(function ($records) {
+                    ->after(function (Collection $records) {
                         foreach ($records as $record) {
-                            //$record->load('timeReduction');
-
-                            $reduction = $record->position;
-                            $counter = \App\Models\TeacherHourCounter::where('id_teacher', $record->id_teacher)->first();
-
-                            if ($reduction && $counter) {
-                                $valorLetiva = floatval($reduction->position_reduction_value ?? 0);
-                                $valorNaoLetiva = floatval($reduction->position_reduction_value_nl ?? 0);
-
-                                $novaLetiva = $counter->carga_componente_letiva + $valorLetiva;
-                                $novaNaoLetiva = $counter->carga_componente_naoletiva + $valorNaoLetiva;
-
-                                $counter->carga_componente_letiva = $novaLetiva;
-                                $counter->carga_componente_naoletiva = $novaNaoLetiva;
-                                $counter->carga_horaria = $novaLetiva + $novaNaoLetiva;
-                                $counter->save();
-                            }
+                            SchedulesResource::hoursCounterUpdate($record);
                         }
                     }),
 
@@ -520,6 +506,36 @@ class SchedulesResource extends Resource
                     ->action(fn(Collection $records) => self::exportSchedules($records))
             ]);
     }
+
+    public static function hoursCounterUpdate(Schedules $schedule): void
+    {
+        $schedule->load('subject');
+
+        $tipo = strtolower(trim($schedule->subject->type ?? 'letiva'));
+
+        $counter = \App\Models\TeacherHourCounter::where('id_teacher', $schedule->id_teacher)->first();
+        if (!$counter) {
+            Log::warning('Contador de horas não encontrado.', ['id_teacher' => $schedule->id_teacher]);
+            return;
+        }
+
+        if ($tipo === 'nao letiva') {
+            $counter->carga_componente_naoletiva += 1;
+            $componente = 'Não Letiva';
+        } else {
+            $counter->carga_componente_letiva += 1;
+            $componente = 'Letiva';
+        }
+
+        $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
+        $counter->save();
+
+        Log::info('✅ Carga horária reposta após exclusão.', [
+            'id_teacher' => $schedule->id_teacher,
+            'componente' => $componente,
+        ]);
+    }
+
 
     public static function getRelations(): array
     {

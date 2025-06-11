@@ -36,4 +36,25 @@ class EditTeacherPosition extends EditRecord
                 }),
         ];
     }
+
+    protected function beforeSave(): void
+    {
+        $data = $this->form->getState();
+
+        $jaTemCargo = \App\Models\TeacherPosition::where('id_teacher', $data['id_teacher'])
+            ->where('id_position', $data['id_position'])
+            ->where('id', '!=', $this->record->id)
+            ->exists();
+
+        if ($jaTemCargo) {
+            \Filament\Notifications\Notification::make()
+                ->title('Cargo duplicado')
+                ->body('Este professor já tem este cargo atribuído.')
+                ->danger()
+                ->persistent()
+                ->send();
+
+            throw new \Filament\Support\Exceptions\Halt('O professor já possui este cargo.');
+        }
+    }
 }

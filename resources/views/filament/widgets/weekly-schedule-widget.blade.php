@@ -37,9 +37,11 @@
                         @endforeach
                     </div>
                     @endif
+                    @if (trim($schedule->turno ?? '') !== '')
                     <div class="text-xs text-gray-600 dark:text-gray-400">
-                        Turno: {{ $schedule->turno ?? '-' }}
+                        Turno: {{ $schedule->turno }}
                     </div>
+                    @endif
                     @else
                     <span class="text-gray-300 dark:text-gray-700 text-sm">-</span>
                     @endif
