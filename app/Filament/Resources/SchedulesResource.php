@@ -401,6 +401,8 @@ class SchedulesResource extends Resource
                     Action::make('justificarConflito')
                         ->label('Solicitar Troca de Horário')
                         ->visible(fn($livewire) => $livewire->conflictingSchedule !== null)
+                        ->icon('heroicon-o-exclamation-triangle')
+                        ->color('danger')
                         ->modalHeading('Justificação do Conflito')
                         ->modalSubmitActionLabel('Submeter Justificação')
                         ->modalCancelActionLabel('Cancelar')

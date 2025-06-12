@@ -18,7 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
-
+use Filament\Forms\Components\Section;
 use function Laravel\Prompts\select;
 
 class SchoolYearsResource extends Resource
@@ -53,16 +53,21 @@ class SchoolYearsResource extends Resource
                     ])
                     ->placeholder('Estado')
                     ->helperText('Introduza o estado'),
-                DatePicker::make('start_date')
-                    ->label('Data de Início')
-                    ->required()
-                    ->placeholder('Data de Início')
-                    ->helperText('Introduza a data de início'),
-                DatePicker::make('end_date')
-                    ->label('Data de Fim')
-                    ->required()
-                    ->placeholder('Data de Fim')
-                    ->helperText('Introduza a data de fim'),
+                Section::make('Baliza temporal')
+                    ->description('Defina a baliza temporal para a marcacao de horários')
+                    ->schema([
+                        DatePicker::make('start_date')
+                            ->label('Data de Início')
+                            ->required()
+                            ->placeholder('Data de Início')
+                            ->helperText('Introduza a data de início'),
+                        DatePicker::make('end_date')
+                            ->label('Data de Fim')
+                            ->required()
+                            ->placeholder('Data de Fim')
+                            ->helperText('Introduza a data de fim'),
+                    ])
+                    ->columns(2),
 
                 //
             ]);
@@ -79,17 +84,16 @@ class SchoolYearsResource extends Resource
                 TextColumn::make('active')
                     ->label('Estado')
                     ->sortable()
-
                     ->searchable()
                     ->formatStateUsing(fn($state) => $state ? 'Ativo' : 'Inativo'),
 
                 TextColumn::make('start_date')
-                    ->label('Data de Início')
+                    ->label('Início de Marcacao')
                     ->date('d/m/Y')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('end_date')
-                    ->label('Data de Fim')
+                    ->label('Fim de Marcacao')
                     ->date('d/m/Y')
                     ->sortable()
                     ->searchable(),

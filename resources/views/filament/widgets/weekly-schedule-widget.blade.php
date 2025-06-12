@@ -27,9 +27,13 @@
                     <div class="text-sm font-semibold text-gray-800 dark:text-white">
                         {{ $schedule->subject->subject ?? 'Sem Matéria' }}
                     </div>
+                    @php
+                    $nomeSala = strtolower($schedule->room->name ?? '');
+                    @endphp
                     <div class="text-xs text-gray-600 dark:text-gray-400">
-                        Sala: {{ $schedule->room->name ?? '-' }}
+                        Sala: {{ $schedule->room->name }}
                     </div>
+
                     @if (!empty($schedule->classes))
                     <div class="text-xs text-gray-600 dark:text-gray-400">
                         @foreach ($schedule->classes as $class)
