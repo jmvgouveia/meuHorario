@@ -39,7 +39,7 @@ class WeeklyScheduleWidget extends Widget
 
         // Busca as marcações aprovadas do professor
         $schedules = Schedules::with(['room', 'weekday', 'timePeriod', 'subject', 'classes'])
-            ->where('status', 'Aprovado')
+            //->where('status', 'Aprovado')
             ->where('id_teacher', $teacher->id)
             ->get();
 

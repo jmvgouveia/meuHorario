@@ -122,6 +122,15 @@ class CreateSchedules extends CreateRecord
         $this->hoursCounterUpdate($this->record);
     }
 
+
+    public function mount(): void
+    {
+        $this->form->fill([
+            'id_weekday' => request('weekday'),
+            'id_timeperiod' => request('timeperiod'),
+        ]);
+    }
+
     protected function afterSave(): void
     {
 

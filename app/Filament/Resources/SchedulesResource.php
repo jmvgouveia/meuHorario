@@ -103,7 +103,7 @@ class SchedulesResource extends Resource
                     // Se não há alunos, exporta turmas com campo de turno vazio
                     foreach ($schedule->classes as $class) {
                         $linha = [
-                            $schedule->id_weekday,
+                            $schedule->id_weekday + 2, // Ajusta o dia da semana para começar em 2 = segunda-feira
                             $schedule->id_timeperiod,
                             "\"{$class->class}\"",
                             $class->year,
