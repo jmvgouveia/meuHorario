@@ -86,8 +86,8 @@ class ClassesResource extends Resource
                 Tables\Actions\ImportAction::make()
                     ->importer(ClassesImporter::class)
                     ->label('Importar Turmas')
-                    ->icon('heroicon-o-arrow-up-tray')
-                //  ->color('success')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
                 // ->action('importer')
 
 

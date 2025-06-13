@@ -69,8 +69,11 @@ class CoursesResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(CourseImporter::class),
-                Tables\Actions\CreateAction::make(),
+                    ->importer(CourseImporter::class)
+                    ->label('Importar Cursos')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

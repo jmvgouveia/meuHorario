@@ -61,7 +61,7 @@ class BuildingResource extends Resource
     {
         return $table
             ->columns([
-              TextColumn::make('name')
+                TextColumn::make('name')
                     ->label(__('filament/resources.buildings.fields.name'))
                     ->sortable()
                     ->searchable(),
@@ -85,8 +85,11 @@ class BuildingResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(BuildingImporter::class),
-                Tables\Actions\CreateAction::make(),
+                    ->importer(BuildingImporter::class)
+                    ->label('Importar Edifícios')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                //Tables\Actions\CreateAction::make(),
             ])
             ->filters([
                 // TextFilter::make('name')

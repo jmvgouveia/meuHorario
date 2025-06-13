@@ -67,8 +67,11 @@ class TimePeriodResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(TimePeriodImporter::class),
-                Tables\Actions\CreateAction::make(),
+                    ->importer(TimePeriodImporter::class)
+                    ->label('Importar Horas de Aula')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

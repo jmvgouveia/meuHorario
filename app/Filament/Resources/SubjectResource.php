@@ -53,7 +53,7 @@ class SubjectResource extends Resource
                     ->options([
                         'Letiva' => 'Letiva',
                         'Não Letiva' => 'Não Letiva',
-                                            ])
+                    ])
                     ->default('Letiva')
                     ->helperText('Selecione o tipo de disciplina'),
                 // Section::make('Professor(s)')->schema([
@@ -99,7 +99,10 @@ class SubjectResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(SubjectImporter::class),
+                    ->importer(SubjectImporter::class)
+                    ->label('Importar Disciplinas')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
                 // Tables\Actions\CreateAction::make()
             ])
             ->bulkActions([

@@ -26,6 +26,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\CheckboxList;
 use Illuminate\Support\Facades\DB;
+use Filament\Tables\Actions\ImportAction;
+
+
 
 class RegistrationResource extends Resource
 {
@@ -94,7 +97,7 @@ class RegistrationResource extends Resource
 
 
                 Select::make('id_schoolyear')
-                    //->options(Nationality::all()->pluck('nationality','id'))
+                    ->default(fn() => DB::table('schoolyears')->where('active', true)->value('id'))
                     ->relationship('schoolyear', 'schoolyear')
                     ->label('Ano Lectivo')
                     ->required()
@@ -172,6 +175,9 @@ class RegistrationResource extends Resource
             ])
             ->filters([
                 //
+            ])
+            ->headerActions([
+                //  ImportAction::make()->importer(RegistrationImporter::class),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

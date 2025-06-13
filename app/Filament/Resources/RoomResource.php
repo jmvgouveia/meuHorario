@@ -72,8 +72,11 @@ class RoomResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(RoomImporter::class),
-                Tables\Actions\CreateAction::make(),
+                    ->importer(RoomImporter::class)
+                    ->label('Importar Salas')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),
             ])
             ->filters([
                 //

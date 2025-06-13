@@ -71,7 +71,10 @@ class NationalityResource extends Resource
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(NationalityImporter::class),
+                    ->importer(NationalityImporter::class)
+                    ->label('Importar Nacionalidades')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
                 //Tables\Actions\CreateAction::make(),
             ])
             ->bulkActions([
