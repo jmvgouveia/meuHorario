@@ -54,12 +54,12 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            // ->widgets([
-            //     // StatsOverview::class,
-            //     // BuildingsOverview::class,
-            //     // DocentesOverview::class,
-            //     // StudentsOverview::class,
-            // ])   
+            ->widgets([
+                //     // StatsOverview::class,
+                //     // BuildingsOverview::class,
+                //     // DocentesOverview::class,
+                //     // StudentsOverview::class,
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

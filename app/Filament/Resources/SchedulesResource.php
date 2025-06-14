@@ -184,9 +184,31 @@ class SchedulesResource extends Resource
         return $form
             ->schema([
 
+                Section::make('Dia / Hora')
+                    ->description('Informe quando a aula será realizada')
+                    ->schema([
+                        Grid::make(2)
+                            ->schema([
+                                Select::make('id_weekday')
+                                    ->label('Dia da Semana')
+                                    ->required()
+                                    ->options(WeekDays::all()->pluck('weekday', 'id'))
+                                    ->placeholder('Selecione o dia da semana'),
+
+
+                                Select::make('id_timeperiod')
+                                    ->label('Hora de Início')
+                                    ->required()
+                                    ->placeholder('Selecione a hora de início')
+                                    ->options(TimePeriod::all()->pluck('description', 'id'))
+                                    ->reactive(),
+
+                            ]),
+                    ]),
                 Section::make('Local da Aula')
                     ->description('Selecione o núcleo/pólo e a sala onde será dada a aula')
                     ->schema([
+
 
                         Grid::make(2)
                             ->schema([
@@ -224,26 +246,7 @@ class SchedulesResource extends Resource
                             ]),
                     ]),
 
-                Section::make('Dia / Hora')
-                    ->description('Informe quando a aula será realizada')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                Select::make('id_weekday')
-                                    ->label('Dia da Semana')
-                                    ->required()
-                                    ->options(WeekDays::all()->pluck('weekday', 'id'))
-                                    ->placeholder('Selecione o dia da semana'),
 
-                                Select::make('id_timeperiod')
-                                    ->label('Hora de Início')
-                                    ->required()
-                                    ->placeholder('Selecione a hora de início')
-                                    ->options(TimePeriod::all()->pluck('description', 'id'))
-                                    ->reactive(),
-
-                            ]),
-                    ]),
 
                 Section::make('Composição da Aula')
                     ->description('Defina a disciplina, turmas e alunos envolvidos')

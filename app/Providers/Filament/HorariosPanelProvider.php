@@ -26,9 +26,11 @@ class HorariosPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            //     ->viteTheme('resources/css/filament/horarios/theme.css')
             ->default()
             ->id('horarios')
             ->path('horarios')
+            //   ->viteTheme('resources/css/filament/horarios/theme.css')
             ->login()
             ->colors([
                 'primary' => Color::Amber,

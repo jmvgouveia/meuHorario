@@ -27,6 +27,9 @@ use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\View;
+
 
 
 
@@ -61,15 +64,38 @@ class ScheduleRequestResource extends Resource
 
 
             ->schema([
+                Section::make('Pedido de Troca de Horário')
+                    ->description('Preencha os campos abaixo para solicitar uma troca de horário.')
+                    ->columns(1)
+                    ->schema([
+                        select::make('id_teacher_requester')
+                            ->label('Requerente')
+                            ->relationship('requester', 'name')
+                            ->default(Filament::auth()->user()->teacher?->id)
+                            ->disabled()
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->columnSpanFull(),
+                        Select::make('status')
+                            ->label('Estado do Pedido')
+                            ->options([
+                                'Pendente' => 'Pendente',
+                                'Aprovado' => 'Aprovado',
+                                'Recusado' => 'Recusado',
+                            ])
+                            ->required()
+                            ->disabled()
+                            ->columnSpanFull(),
+                        Textarea::make('justification')
+                            ->label('Justificação do Pedido')
+                            ->disabled()
+                            ->columnSpan('full'),
 
-                Textarea::make('justification')
-                    ->label('Justificação do Pedido')
-                    ->disabled()
-                    ->columnSpan('full'),
-                Textarea::make('status')
-                    ->label('Estado do Pedido')
 
-                    ->disabled(),
+                    ]),
+
+
 
             ]);
     }

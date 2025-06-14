@@ -140,10 +140,14 @@
                 $link = null;
 
                 if ($schedule) {
-
+                // DEBUG:
+                dump("User Loggado: " . auth()->id());
                 $authTeacherId = auth()->user()?->teacher?->id;
                 $authId = $authTeacherId;
+                dump("ID-PROF: " . $authTeacherId);
 
+                dump("----------------------------------------------");
+                dump("Horario (ID): " . $schedule->id);
 
                 if ($recusados->has($schedule->id)){
 
@@ -156,18 +160,19 @@
 
 
                 if ($recusados->has($schedule->id)){
+
                 $hasNotification = true;
                 $notifLetter = 'R';
                 $tooltip = 'O seu pedido de troca foi recusado.';
                 $link = route('filament.admin.resources.schedule-requests.edit', $recusados[$schedule->id]->id);
                 }
 
+                if ($escalado->has($schedule->id)){
 
-                if ($escalados->has($schedule->id)){
                 $hasNotification = true;
                 $notifLetter = 'E';
-                $tooltip = 'O pedido de troca foi escalado para análise.';
-                $link = route('filament.admin.resources.schedule-request-resolve-conflicts.edit', $escalados[$schedule->id]->id);
+                $tooltip = 'O pedido de troca foi Escalado.';
+                $link = route('filament.admin.resources.schedule-requests.edit', $recusados[$schedule->id]->id);
 
                 }
 
@@ -176,6 +181,13 @@
 
                 if ($firstRequest) {
 
+                dump("Pedido de Troca: " . $firstRequest->id);
+                dump("Horario Original: " . $firstRequest->id_schedule_conflict);
+                dump("Proprietário: " . $firstRequest->scheduleConflict?->teacher?->id ?? '—');
+                dump("Horario Novo: " . $firstRequest->id_schedule_novo);
+                dump("Requetente: " . $firstRequest->id_teacher_requester);
+                dump("Status: " . $firstRequest->status);
+
                 $requesterId = $firstRequest->id_teacher_requester;
                 $targetTeacherId = $firstRequest->scheduleConflict?->teacher_id;
                 $status = $firstRequest->status;
@@ -183,10 +195,23 @@
                 if ($status === 'Pendente' && $authTeacherId === $firstRequest->scheduleConflict?->teacher?->id) {
                 // O professor dono do horário original deve responder
                 $hasNotification = true;
-                $notifLetter = 'T';
+                $notifLetter = '';
                 $tooltip = 'Pedido de troca pendente.';
                 $link = route('filament.admin.resources.schedule-requests.edit', $firstRequest->id);
                 }
+                dump("_________________________________");
+                dump("r:", $status, $firstRequest->id_schedule_novo, $schedule->id); dump("_________________________________");
+
+
+
+
+
+                dump("---");
+
+                dump($authTeacherId , $status , $firstRequest->id_schedule_novo , $firstRequest->id_teacher_requester );
+
+
+
                 }
 
                 $link ??= route('filament.admin.resources.schedules.edit', $schedule->id);
@@ -208,9 +233,9 @@
 
                             @if ($hasNotification)
                             <span
-                                class="notificacao pulsar"
+                                class="notificacao {{ $notifLetter === '' ? 'pulsar' : '' }}"
                                 title="{{ match($notifLetter) {
-                                    'T' => 'Pedido de troca pendente.',
+                                    '' => 'Pedido de troca pendente.',
                                     'R' => 'O seu pedido de troca foi recusado.',
                                     'E' => 'Pedido de troca escalado para análise.',
                                     default => '',

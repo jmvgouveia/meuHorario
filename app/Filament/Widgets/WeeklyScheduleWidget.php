@@ -15,6 +15,7 @@ use Filament\Facades\Filament;  // <-- Importar aqui
 class WeeklyScheduleWidget extends Widget
 {
     protected static string $view = 'filament.widgets.weekly-schedule-widget';
+    protected static bool $isLazy = false; // Para garantir que carrega completamente
 
     protected int | string | array $columnSpan = [
         'sm' => 12,
@@ -53,22 +54,32 @@ class WeeklyScheduleWidget extends Widget
         $calendar = [];
 
         foreach ($timePeriods as $tp) {
-            foreach ($weekdays as $day) {
-                $calendar[$tp->description][$day] = null;
+            foreach (array_keys($weekdays) as $dayId) {
+                $calendar[$tp->id][$dayId] = null;
             }
         }
-
         // Preenche o calendário com as marcações do professor
         foreach ($schedules as $schedule) {
-            $day = $schedule->weekday->weekday;
-            $time = $schedule->timePeriod->description;
-
-            if (in_array($day, $weekdays)) {
-                $calendar[$time][$day] = $schedule;
-            }
+            $dayId = $schedule->id_weekday;
+            $timeId = $schedule->id_timeperiod;
+            $calendar[$timeId][$dayId] = $schedule;
         }
 
+        $recusados = \App\Models\ScheduleRequest::where('status', 'Recusado')
+            ->where('id_teacher_requester', $teacher->id)
+            ->get()
+            ->keyBy('id_schedule_novo');
+
+        $escalados = \App\Models\ScheduleRequest::where('status', 'Escalado')
+            ->get()
+            ->reduce(function ($carry, $req) {
+                $carry[$req->id_schedule_conflict] = $req;
+                $carry[$req->id_schedule_novo] = $req;
+                return $carry;
+            }, collect());
+
         // Retorna a view com o calendário, dias da semana e períodos de tempo
-        return view(static::$view, compact('calendar', 'weekdays', 'timePeriods'));
+        return view(static::$view, compact('calendar', 'weekdays', 'timePeriods', 'recusados', 'escalados'))
+            ->with('teacher', $teacher);
     }
 }

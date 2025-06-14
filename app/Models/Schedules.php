@@ -26,7 +26,6 @@ class Schedules extends Model
         return $this->belongsTo(Subject::class, 'id_subject');
     }
 
-
     public function weekday()
     {
         return $this->belongsTo(WeekDays::class, 'id_weekday');
@@ -54,5 +53,9 @@ class Schedules extends Model
     public function teacher()
     {
         return $this->belongsTo(Teacher::class, 'id_teacher');
+    }
+    public function requests()
+    {
+        return $this->hasMany(ScheduleRequest::class, 'id_schedule_conflict');
     }
 }

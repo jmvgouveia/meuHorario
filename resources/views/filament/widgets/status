@@ -1,25 +1,16 @@
-{{-- weekly-schedule-widget.blade.php --}}
-
-{{-- Estilos das notificações e badges --}}
 <style>
     .notificacao {
         position: absolute;
         top: -4px;
         right: -4px;
-        height: 16px;
-        width: 16px;
+        height: 10px;
+        width: 10px;
         background-color: #dc2626;
         border-radius: 9999px;
         z-index: 10;
-        color: white;
-        font-size: 10px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
-    .notificacao.pulsar::after {
+    .notificacao::after {
         content: '';
         position: absolute;
         top: 0;
@@ -89,9 +80,13 @@
     <table class="min-w-[800px] w-full table-fixed border-collapse text-center text-sm">
         <thead>
             <tr class="bg-gray-100 dark:bg-gray-800">
-                <th class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 sticky left-0 z-10">Horário</th>
+                <th class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 sticky left-0 z-10">
+                    Horário
+                </th>
                 @foreach ($weekdays as $dayId => $dayName)
-                <th class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ $dayName }}</th>
+                <th class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                    {{ $dayName }}
+                </th>
                 @endforeach
             </tr>
         </thead>
@@ -101,10 +96,8 @@
                 <td class="px-4 py-3 font-semibold bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 sticky left-0 z-10 whitespace-nowrap">
                     {{ $timePeriod->description }}
                 </td>
-
                 @foreach ($weekdays as $dayId => $dayName)
                 @php
-
                 $schedule = $calendar[$timePeriod->id][$dayId] ?? null;
 
                 $badgeClass = match($schedule->status ?? '') {
@@ -127,75 +120,19 @@
                 $info[] = 'Turno: ' . $schedule->turno;
                 }
 
-                if (!empty($schedule->id)) {
-                $info[] = 'ID: ' . $schedule->id;
-                }
 
-
-                }
-
-
-                $hasNotification = false;
-                $notifLetter = '';
-                $link = null;
-
-                if ($schedule) {
-
-                $authTeacherId = auth()->user()?->teacher?->id;
-                $authId = $authTeacherId;
-
-
-                if ($recusados->has($schedule->id)){
-
-                $hasNotification = true;
-                $notifLetter = 'R';
-                $tooltip = 'O seu pedido de troca foi recusado.';
-                $link = route('filament.admin.resources.schedule-requests.edit', $recusados[$schedule->id]->id);
-
-                }
-
-
-                if ($recusados->has($schedule->id)){
-                $hasNotification = true;
-                $notifLetter = 'R';
-                $tooltip = 'O seu pedido de troca foi recusado.';
-                $link = route('filament.admin.resources.schedule-requests.edit', $recusados[$schedule->id]->id);
-                }
-
-
-                if ($escalados->has($schedule->id)){
-                $hasNotification = true;
-                $notifLetter = 'E';
-                $tooltip = 'O pedido de troca foi escalado para análise.';
-                $link = route('filament.admin.resources.schedule-request-resolve-conflicts.edit', $escalados[$schedule->id]->id);
-
-                }
-
-
-                $firstRequest = $schedule->requests()->with('scheduleConflict')->orderBy('created_at')->first();
-
-                if ($firstRequest) {
-
-                $requesterId = $firstRequest->id_teacher_requester;
-                $targetTeacherId = $firstRequest->scheduleConflict?->teacher_id;
-                $status = $firstRequest->status;
-
-                if ($status === 'Pendente' && $authTeacherId === $firstRequest->scheduleConflict?->teacher?->id) {
-                // O professor dono do horário original deve responder
-                $hasNotification = true;
-                $notifLetter = 'T';
-                $tooltip = 'Pedido de troca pendente.';
-                $link = route('filament.admin.resources.schedule-requests.edit', $firstRequest->id);
-                }
-                }
-
-                $link ??= route('filament.admin.resources.schedules.edit', $schedule->id);
                 }
                 @endphp
 
                 <td class="px-4 py-3 align-top text-gray-900 dark:text-gray-100 border-t border-gray-200 dark:border-gray-700">
                     @if ($schedule)
-                    <a href="{{ $link }}">
+                    @php
+                    $firstRequest = $schedule->requests()->first();
+                    @endphp
+
+                    <a href="{{ $firstRequest
+    ? route('filament.admin.resources.schedule-requests.edit', $firstRequest->id)
+    : route('filament.admin.resources.schedules.edit', $schedule->id) }}">
                         <div class="relative">
                             <div class="status-badge {{ $badgeClass }}">
                                 <div class="status-title">{{ $schedule->subject->subject ?? 'Sem Matéria' }}</div>
@@ -203,28 +140,17 @@
                                 <div class="status-info">{{ $i }}</div>
                                 @endforeach
                             </div>
-
-                            <!-- <span class="notificacao pulsar">R</span> -->
-
-                            @if ($hasNotification)
-                            <span
-                                class="notificacao pulsar"
-                                title="{{ match($notifLetter) {
-                                    'T' => 'Pedido de troca pendente.',
-                                    'R' => 'O seu pedido de troca foi recusado.',
-                                    'E' => 'Pedido de troca escalado para análise.',
-                                    default => '',
-                                        } }}">
-                                {{ $notifLetter }}
-                            </span>
+                            @if ($schedule->requests()->exists())
+                            <span class="notificacao"></span>
                             @endif
                         </div>
                     </a>
                     @else
                     <a href="{{ route('filament.admin.resources.schedules.create', [
-                            'weekday' => $dayId,
-                            'timeperiod' => $timePeriod->id,
-                        ]) }}" class="block p-2 text-gray-400 dark:text-gray-600 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                                    'weekday' => $dayId,
+                                    'timeperiod' => $timePeriod->id,
+                                ]) }}"
+                        class="block p-2 text-gray-400 dark:text-gray-600 hover:text-blue-600 dark:hover:text-blue-400 transition">
                         +
                     </a>
                     @endif
@@ -233,7 +159,5 @@
             </tr>
             @endforeach
         </tbody>
-
     </table>
-
 </div>
