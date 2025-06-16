@@ -36,18 +36,15 @@ class ScheduleRequestResolveConflict extends Resource
                     Placeholder::make('professor_original')
                         ->label('Marcado por:')
                         ->content(fn($record) => $record->scheduleConflict->teacher->name ?? '—'),
-
                     Placeholder::make('sala')
                         ->label('Sala')
                         ->content(fn($record) => $record->scheduleConflict->room->name ?? '—'),
                     Placeholder::make('dia')
                         ->label('Dia da Semana')
                         ->content(fn($record) => $record->scheduleConflict->weekday->weekday ?? '—'),
-
                     Placeholder::make('hora')
                         ->label('Hora')
                         ->content(fn($record) => $record->scheduleConflict->timePeriod->description ?? '—'),
-
                 ])
                 ->columns(2),
 
@@ -90,13 +87,20 @@ class ScheduleRequestResolveConflict extends Resource
                     TextInput::make('status')
                         ->label('Estado Atual')
                         ->disabled(),
+                    Placeholder::make('solicitante')
+                        ->label('Pedido feito por:')
+                        ->content(fn($record) => $record->requester->name ?? '—'),
+                    Textarea::make('justification_escalada')
+                        ->label('Justificação para Escalada')
+                        ->disabled()
+                        ->visible(fn($get) => $get('status') === 'Escalado'),
 
-                    Placeholder::make('escalada')
-                        ->content(
-                            fn($record) => $record->status === 'Escalado'
-                                ? 'Este pedido foi escalado para a Direção Pedagógica.'
-                                : 'Este pedido ainda não foi escalado.'
-                        ),
+                    // Placeholder::make('escalada')
+                    //     ->content(
+                    //         fn($record) => $record->status === 'Escalado'
+                    //             ? 'Este pedido foi escalado para a Direção Pedagógica.'
+                    //             : 'Este pedido ainda não foi escalado.'
+                    //     ),
                 ])
                 ->columns(1),
 
@@ -145,6 +149,9 @@ class ScheduleRequestResolveConflict extends Resource
                         'Pendente' => 'warning',
                         'Aprovado' => 'success',
                         'Recusado' => 'danger',
+                        'Escalado' => 'info',
+                        'Aprovado DP' => 'primary',
+                        'Recusado DP' => 'danger',
                         default => 'gray',
                     })
                     ->sortable(),

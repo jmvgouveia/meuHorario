@@ -37,66 +37,73 @@ class EditScheduleRequestResolveConflict extends EditRecord
     }
 
     protected function getFormActions(): array
-{
-    return [
+    {
+        return [
 
-        Action::make('aprovar')
-            ->label('Aprovar Pedido')
-            ->color('success')
-            ->requiresConfirmation()
-            ->form([
-                Select::make('id_room_novo')
-                    ->label('Sala Nova')
-                    ->required()
-                    ->preload()
-                    ->options(fn () => $this->getAvailableRooms()),
+            Action::make('aprovar')
+                ->label('Aprovar Pedido')
+                ->color('success')
+                ->requiresConfirmation()
+                ->form([
+                    Select::make('id_room_novo')
+                        ->label('Sala Nova')
+                        ->required()
+                        ->preload()
+                        ->options(fn() => $this->getAvailableRooms()),
 
-                Textarea::make('response')
-                    ->label('Justificação')
-                    ->required()
-                    ->rows(4),
-            ])
-            ->action(function (array $data) {
-                $this->record->update([
-                    'status' => 'Aprovado',
-                    'response' => $data['response'],
-                ]);
+                    Textarea::make('response_coord')
+                        ->label('Justificação 123')
+                        ->required()
+                        ->rows(4),
+                ])
+                ->action(function (array $data) {
+                    $this->record->update([
+                        'status' => 'Aprovado DP',
+                        'response_coord' => $data['response_coord'],
+                    ]);
 
-                $this->record->scheduleConflict?->update([
-                    'status' => 'Aprovado',
-                    'id_room' => $data['id_room_novo'],
-                ]);
+                    $this->record->scheduleConflict?->update([
+                        'status' => 'Aprovado DP',
+                        'id_room' => $data['id_room_novo'],
+                    ]);
 
-                $this->record->scheduleNovo?->update([
-                    'status' => 'Aprovado',
-                ]);
+                    $this->record->scheduleNovo?->update([
+                        'status' => 'Aprovado',
+                    ]);
 
-                Notification::make()
-                    ->title('Troca Aprovada')
-                    ->success()
-                    ->body('A troca foi aprovada com sucesso.')
-                    ->send();
-            }),
+                    Notification::make()
+                        ->title('Troca Aprovada')
+                        ->success()
+                        ->body('A troca foi aprovada com sucesso.')
+                        ->send();
+                }),
 
-        Action::make('recusar')
-            ->label('Recusar Pedido')
-            ->color('danger')
-            ->requiresConfirmation()
-            ->action(function () {
-                $this->record->update([
-                    'status' => 'Recusado',
-                ]);
+            Action::make('recusar')
+                ->label('Recusar Pedido')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->form([
+                    Textarea::make('response_coord')
+                        ->label('Justificação 321')
+                        ->required()
+                        ->rows(4),
+                ])
+                ->action(function (array $data) {
+                    $this->record->update([
+                        'status' => 'Recusado DP',
+                        'response_coord' => $data['response_coord'],
+                    ]);
 
-                Notification::make()
-                    ->title('Pedido recusado')
-                    ->danger()
-                    ->body('A troca foi recusada.')
-                    ->send();
-            }),
-    ];
-}
+                    Notification::make()
+                        ->title('Pedido recusado')
+                        ->danger()
+                        ->body('A troca foi recusada.')
+                        ->send();
+                }),
+        ];
+    }
 
-     protected function getAvailableRooms(): array
+    protected function getAvailableRooms(): array
     {
         $this->record->loadMissing('scheduleConflict.room');
 
@@ -106,7 +113,7 @@ class EditScheduleRequestResolveConflict extends EditRecord
         $idTimePeriod = $conflict->id_timeperiod;
         $idWeekday = $conflict->id_weekday;
 
-        if (!$edificioId || !$idTimePeriod || !$idWeekday) {
+        if (is_null($edificioId) || is_null($idTimePeriod) || is_null($idWeekday)) {
             return [];
         }
 
@@ -115,12 +122,9 @@ class EditScheduleRequestResolveConflict extends EditRecord
                 $query->where('id_timeperiod', $idTimePeriod)
                     ->where('id_weekday', $idWeekday);
             })
+            ->get()
+            ->unique('name')
             ->pluck('name', 'id')
             ->toArray();
     }
 }
-
-
-
-                
-            

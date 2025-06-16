@@ -83,9 +83,14 @@ class StudentResource extends Resource
                     ->placeholder('Nome'),
                 //
             ])
+
             ->headerActions([
                 Tables\Actions\ImportAction::make()
-                    ->importer(StudentImporter::class),
+                    ->importer(StudentImporter::class)
+                    ->label('Import Students')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),
             ])
             ->filters([
                 //

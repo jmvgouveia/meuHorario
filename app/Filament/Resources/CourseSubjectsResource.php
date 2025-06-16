@@ -84,11 +84,17 @@ class CourseSubjectsResource extends Resource
 
             ])->filters([
                 //
-            ])->headerActions([
-                Tables\Actions\ImportAction::make()
-                    ->importer(CourseSubjectsImporter::class),
+            ])
 
-            ])->actions([
+            ->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(CourseSubjectsImporter::class)
+                    ->label('Import Course Subjects')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),])
+            ])
+            ->actions([
                 //
             ])->bulkActions([
                 //

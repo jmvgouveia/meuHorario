@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\TimeReductionTeacherImporter;
 use App\Filament\Resources\TimeReductionTeachersResource\Pages;
 use App\Filament\Resources\TimeReductionTeachersResource\RelationManagers;
 use App\Models\TimeReductionTeachers;
@@ -117,6 +118,14 @@ class TimeReductionTeachersResource extends Resource
             ])
             ->filters([
                 //
+            ])
+            ->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(TimeReductionTeacherImporter::class)
+                    ->label('Import Time Reductions')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),])
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make()

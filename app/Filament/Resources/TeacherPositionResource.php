@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\TeacherPositionImporter;
 use App\Filament\Resources\TeacherPositionResource\Pages;
 use App\Filament\Resources\TeacherPositionResource\RelationManagers;
 use App\Models\TeacherPosition;
@@ -68,6 +69,14 @@ class TeacherPositionResource extends Resource
                     ->searchable()
                     ->sortable(),
                 //
+            ])
+            ->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(TeacherPositionImporter::class)
+                    ->label('Import Positions')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),
             ])
             ->filters([
                 //

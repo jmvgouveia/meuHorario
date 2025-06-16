@@ -19,6 +19,24 @@
         justify-content: center;
     }
 
+    .notificacao.dp {
+        background-color: #065f46;
+        /* verde mais escuro */
+        color: white;
+        font-size: 9px;
+        font-weight: bold;
+        height: 18px;
+        width: 18px;
+        border-radius: 9999px;
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .notificacao.pulsar::after {
         content: '';
         position: absolute;
@@ -80,13 +98,22 @@
         background-color: #ca8a04;
     }
 
+    .badge-reuniao-tee {
+        background-color: #1e40af;
+        /* Azul */
+        color: white;
+        /* Para garantir boa legibilidade */
+    }
+
     .badge-rejeitado {
         background-color: #dc2626;
     }
 </style>
 
 <div class="w-full overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+
     <table class="min-w-[800px] w-full table-fixed border-collapse text-center text-sm">
+
         <thead>
             <tr class="bg-gray-100 dark:bg-gray-800">
                 <th class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 sticky left-0 z-10">Horário</th>
@@ -109,6 +136,8 @@
 
                 $badgeClass = match($schedule->status ?? '') {
                 'Aprovado' => 'badge-aprovado',
+                'Aprovado DP' => 'badge-aprovado', // usa a mesma classe
+
                 'Pendente' => 'badge-pendente',
                 'Rejeitado' => 'badge-rejeitado',
                 default => '',
@@ -154,13 +183,41 @@
 
                 }
 
-
                 if ($recusados->has($schedule->id)){
                 $hasNotification = true;
                 $notifLetter = 'R';
                 $tooltip = 'O seu pedido de troca foi recusado.';
                 $link = route('filament.admin.resources.schedule-requests.edit', $recusados[$schedule->id]->id);
                 }
+
+                if ($schedule && $PedidosAprovadosDP->has($schedule->id)) {
+                $req = $PedidosAprovadosDP[$schedule->id];
+                $authTeacherId = auth()->user()?->teacher?->id;
+
+                $requesterId = $req->id_teacher_requester;
+                $targetId = $req->scheduleConflict?->teacher_id;
+
+                if ($authTeacherId === $requesterId || $authTeacherId === $targetId) {
+                $hasNotification = true;
+                $notifLetter = 'DP';
+                $notifClass = 'dp';
+                $tooltip = 'Troca aprovada.';
+                $link = route('filament.admin.resources.schedule-requests.edit', $req->id);
+                }
+                }
+
+
+                $scheduleId = (int) $schedule->id;
+
+                if ($schedule && $AprovadosDP->has($scheduleId)) {
+                $hasNotification = true;
+                $notifLetter = 'DP';
+                $notifClass = 'dp';
+                $tooltip = 'Troca aprovada.';
+                $link = route('filament.admin.resources.schedules.edit', $scheduleId);
+                }
+
+
 
 
                 if ($escalados->has($schedule->id)){
@@ -171,7 +228,6 @@
 
                 }
 
-
                 $firstRequest = $schedule->requests()->with('scheduleConflict')->orderBy('created_at')->first();
 
                 if ($firstRequest) {
@@ -179,6 +235,14 @@
                 $requesterId = $firstRequest->id_teacher_requester;
                 $targetTeacherId = $firstRequest->scheduleConflict?->teacher_id;
                 $status = $firstRequest->status;
+
+                if ($status === 'Aprovado DP' && $authTeacherId === $requesterId) {
+                $hasNotification = true;
+                $notifLetter = 'DP';
+                $notifClass = 'dp'; // Define a classe personalizada
+                $tooltip = 'O seu pedido foi aceite.';
+                }
+
 
                 if ($status === 'Pendente' && $authTeacherId === $firstRequest->scheduleConflict?->teacher?->id) {
                 // O professor dono do horário original deve responder
@@ -193,11 +257,18 @@
                 }
                 @endphp
 
-                <td class="px-4 py-3 align-top text-gray-900 dark:text-gray-100 border-t border-gray-200 dark:border-gray-700">
+                <td class="px-4 py-3 align-top text-gray-900 dark:text-gray-100 border-t border-gray-200            dark:border-gray-700">
                     @if ($schedule)
                     <a href="{{ $link }}">
                         <div class="relative">
-                            <div class="status-badge {{ $badgeClass }}">
+                            <!-- <div class="status-badge {{ $badgeClass }}"> -->
+                            <div class="status-badge {{
+                                in_array(strtolower($schedule->subject->subject ?? ''), ['reunião', 'tee'])
+                                    ? 'badge-reuniao-tee'
+                                    : $badgeClass
+                            }}">
+
+
                                 <div class="status-title">{{ $schedule->subject->subject ?? 'Sem Matéria' }}</div>
                                 @foreach ($info as $i)
                                 <div class="status-info">{{ $i }}</div>
@@ -208,25 +279,28 @@
 
                             @if ($hasNotification)
                             <span
-                                class="notificacao pulsar"
+                                class="notificacao {{ $notifLetter === 'DP' ? 'dp' : 'pulsar' }}"
                                 title="{{ match($notifLetter) {
-                                    'T' => 'Pedido de troca pendente.',
-                                    'R' => 'O seu pedido de troca foi recusado.',
-                                    'E' => 'Pedido de troca escalado para análise.',
-                                    default => '',
-                                        } }}">
+                                        'T' => 'Pedido de troca pendente.',
+                                        'R' => 'O seu pedido de troca foi recusado.',
+                                        'E' => 'Pedido de troca escalado para análise.',
+                                        'DP' => 'O seu pedido foi aceite.',
+                                        default => '',
+                                    } }}">
                                 {{ $notifLetter }}
                             </span>
                             @endif
                         </div>
                     </a>
                     @else
+
                     <a href="{{ route('filament.admin.resources.schedules.create', [
                             'weekday' => $dayId,
                             'timeperiod' => $timePeriod->id,
                         ]) }}" class="block p-2 text-gray-400 dark:text-gray-600 hover:text-blue-600 dark:hover:text-blue-400 transition">
                         +
                     </a>
+
                     @endif
                 </td>
                 @endforeach
@@ -235,5 +309,28 @@
         </tbody>
 
     </table>
+    <div class="flex flex-wrap justify-center gap-2 mb-4 px-4 text-xs font-medium max-w-4xl mx-auto">
+        <div class="status-badge badge-aprovado w-28 text-center truncate">Aprovado</div>
+        <div class="status-badge badge-pendente w-28 text-center truncate">Pendente</div>
 
+        <div class="flex items-center gap-1 w-36 truncate">
+            <span class="notificacao pulsar" style="position: static; transform: scale(0.75);">T</span>
+            <span>Tem um Pedido de Troca</span>
+        </div>
+
+        <div class="flex items-center gap-1 w-36 truncate">
+            <span class="notificacao pulsar" style="position: static; transform: scale(0.75);">R</span>
+            <span>Seu Pedido foi Recusado</span>
+        </div>
+
+        <div class="flex items-center gap-1 w-36 truncate">
+            <span class="notificacao pulsar" style="position: static; transform: scale(0.75);">E</span>
+            <span>Pedido Escalado para DP</span>
+        </div>
+
+        <div class="flex items-center gap-1 w-36 truncate">
+            <span class="notificacao dp" style="position: static; transform: scale(0.75);">DP</span>
+            <span>Troca Aprovada por DP</span>
+        </div>
+    </div>
 </div>

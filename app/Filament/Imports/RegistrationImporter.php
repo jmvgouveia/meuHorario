@@ -1,101 +1,146 @@
 <?php
 
-// namespace App\Filament\Imports;
+namespace App\Filament\Imports;
 
-// use App\Models\Registration;
-// use App\Models\Student;
-// use App\Models\Course;
-// use App\Models\Classes;
-// use App\Models\SchoolYears;
-// use App\Models\Subject;
-// use Filament\Actions\Imports\ImportColumn;
-// use Filament\Actions\Imports\Importer;
-// use Filament\Actions\Imports\Models\Import;
-// use Illuminate\Support\Facades\Log;
+use App\Models\Registration;
+use Filament\Actions\Imports\ImportColumn;
+use Filament\Actions\Imports\Importer;
+use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
-// class RegistrationImporter extends Importer
-// {
-//     protected static ?string $model = Registration::class;
+class RegistrationImporter extends Importer
+{
+    protected static ?string $model = Registration::class;
 
-//     public static function getColumns(): array
-//     {
-//         return [
-//             ImportColumn::make('id_student'),
-//             ImportColumn::make('id_course'),
-//             ImportColumn::make('id_class'),
-//             ImportColumn::make('id_schoolyear'),
-//             ImportColumn::make('subjects')
-//                 ->label('Disciplinas (IDs separados por vírgula)')
-//                 ->rules(['nullable', 'string']),
-//         ];
-//     }
+    public static function getColumns(): array
+    {
+        Log::debug('RegistrationImporter getColumns called');
+        return [
+            ImportColumn::make('id_student')
+                ->label('ID do Aluno')
+                ->rules(['required', 'integer']),
+            ImportColumn::make('id_course')
+                ->label('ID do Curso')
+                ->rules(['required', 'integer']),
+            ImportColumn::make('id_schoolyear')
+                ->label('ID do Ano Letivo')
+                ->rules(['required', 'integer']),
+            ImportColumn::make('id_class')
+                ->label('ID da Turma')
+                ->rules(['required', 'integer']),
+            // Campo que será completamente ignorado pelo Filament
+            ImportColumn::make('id_subjects')
+                ->label('ID da(s) Disciplina(s)')
+                ->rules(['required', 'string'])
+                ->example('1,2,3')
+                ->fillRecordUsing(function () {
+                    // Retorna null para não preencher nada no modelo
+                    return null;
+                }),
+        ];
+    }
 
-//     public static function getRows(array $data, Import $import): array
-//     {
-//         unset($data['id']);
+    // Override completo do processo de criação
+    public function resolveRecord(): ?Registration
+    {
+        try {
+            // Dados da linha atual
+            $rowData = $this->data;
 
-//         return [$data];
-//     }
+            Log::debug('Processando linha:', $rowData);
 
-//     public static function getOptionsFormComponents(): array
-//     {
-//         return [];
-//     }
+            // Dados APENAS para criar o Registration (campos que existem na tabela)
+            $registrationData = [
+                'id_student' => (int) $rowData['id_student'],
+                'id_course' => (int) $rowData['id_course'],
+                'id_schoolyear' => (int) $rowData['id_schoolyear'],
+                'id_class' => (int) $rowData['id_class'],
+            ];
 
-//     public function import(array $data, Import $import): void
-//     {
-//         Log::info('IMPORT DATA RECEBIDA', $data);
+            // Cria o registro de Registration
+            $registration = Registration::create($registrationData);
 
-//         try {
-//             $import->increment('processed_rows');
+            Log::debug('Registration criado com ID:', ['id' => $registration->id]);
 
-//             // Validação
-//             if (
-//                 !Student::find($data['id_student']) ||
-//                 !Course::find($data['id_course']) ||
-//                 !Classes::find($data['id_class']) ||
-//                 !SchoolYears::find($data['id_schoolyear'])
-//             ) {
-//                 Log::warning("IDs inválidos: " . json_encode($data));
-//                 $import->increment('failed_rows');
-//                 return;
-//             }
+            // Processa as disciplinas se existirem
+            if (isset($rowData['id_subjects']) && !empty($rowData['id_subjects'])) {
+                $this->attachSubjectsToRegistration($registration, $rowData['id_subjects']);
+            }
 
-//             // Registo ou atualização
-//             $registration = Registration::updateOrCreate(
-//                 [
-//                     'id_student' => $data['id_student'],
-//                     'id_schoolyear' => $data['id_schoolyear'],
-//                 ],
-//                 [
-//                     'id_course' => $data['id_course'],
-//                     'id_class' => $data['id_class'],
-//                 ]
-//             );
+            return $registration;
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar registration:', [
+                'error' => $e->getMessage(),
+                'data' => $this->data ?? 'N/A'
+            ]);
+            throw $e;
+        }
+    }
 
-//             Log::info('MATRÍCULA CRIADA ID: ' . $registration->id);
+    private function attachSubjectsToRegistration(Registration $registration, string $subjectsList): void
+    {
+        try {
+            Log::debug('Iniciando anexação de subjects:', [
+                'registration_id' => $registration->id,
+                'subjects_string' => $subjectsList
+            ]);
 
-//             // Disciplinas
-//             if (!empty($data['subjects'])) {
-//                 $subjectIds = collect(explode(',', $data['subjects']))
-//                     ->map(fn($id) => (int) trim($id))
-//                     ->filter(fn($id) => Subject::find($id));
+            // Converte string "136,98,130" em array [136,98,130]
+            $subjectIds = array_map('trim', explode(',', $subjectsList));
+            $subjectIds = array_filter($subjectIds, function ($id) {
+                return is_numeric($id) && $id > 0;
+            });
+            $subjectIds = array_map('intval', $subjectIds);
 
-//                 Log::info('ASSOCIAR SUBJECTS: ' . json_encode($subjectIds));
+            Log::debug('IDs processados:', [
+                'registration_id' => $registration->id,
+                'subject_ids' => $subjectIds,
+                'count' => count($subjectIds)
+            ]);
 
-//                 $registration->subjects()->sync($subjectIds);
-//             }
+            if (!empty($subjectIds)) {
+                // Anexa as disciplinas na tabela pivot
+                $registration->subjects()->attach($subjectIds);
 
-//             $import->increment('successful_rows');
-//         } catch (\Throwable $e) {
-//             $import->increment('failed_rows');
-//             Log::error("ERRO GERAL: " . $e->getMessage());
-//             throw $e;
-//         }
-//     }
+                Log::debug('Subjects anexados com sucesso:', [
+                    'registration_id' => $registration->id,
+                    'attached_subjects' => $subjectIds
+                ]);
 
-//     public static function getCompletedNotificationBody(Import $import): string
-//     {
-//         return "Importadas com sucesso {$import->successful_rows} matrículas.";
-//     }
-// }
+                // Verifica se realmente foram anexados
+                $attachedCount = $registration->subjects()->count();
+                Log::debug('Verificação após anexação:', [
+                    'registration_id' => $registration->id,
+                    'total_subjects_attached' => $attachedCount
+                ]);
+            } else {
+                Log::warning('Nenhum subject ID válido encontrado:', [
+                    'registration_id' => $registration->id,
+                    'original_string' => $subjectsList
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Erro ao anexar subjects:', [
+                'registration_id' => $registration->id,
+                'subjects_list' => $subjectsList,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    // Impede que o Filament tente fazer qualquer operação adicional
+    protected function handleRecordCreation(array $data): Registration
+    {
+        // Não faz nada - o resolveRecord() já cuidou de tudo
+        return $this->record;
+    }
+
+    public static function getCompletedNotificationBody(Import $import): string
+    {
+        $count = $import->successful_rows;
+        return "{$count} Matriculas Importadas com sucesso.";
+    }
+}

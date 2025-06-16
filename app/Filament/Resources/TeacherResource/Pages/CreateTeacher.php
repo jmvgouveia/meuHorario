@@ -9,43 +9,69 @@ use Filament\Pages\Actions\Action;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Filament\Notifications\Notification;
+
 
 
 class CreateTeacher extends CreateRecord
 {
     protected static string $resource = \App\Filament\Resources\TeacherResource::class;
 
-    // Este método é chamado antes de salvar os dados no banco
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        //Log::debug('Dados recebidos para criação do professor:', $data);
+        $userData = $data['user'];
 
-        // Acessando os dados do 'user' dentro do array
-        $userData = $data['user']; // Obtém o array de dados do usuário
-        //   Log::debug('Dados para criação do professor:', $userData);
-        // Criar o usuário (User)
-        $user = User::create([
-            'name' => $data['name'],               // Nome do professor
-            'email' => $userData['email'],         // Acessando o email do 'user'
-            'password' => Hash::make($userData['password']),  // Acessando a senha do 'user'
-            // 'id_role' => 5, // ID do papel de professor
+        // Validação
+        $validator = Validator::make([
+            'name' => $data['name'],
+            'email' => $userData['email'],
+            'password' => $userData['password'],
+        ], [
+            'name' => ['required', 'string', 'max:255', 'unique:users,name'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:6'],
         ]);
 
-        $horas = TeacherHourCounter::create([
-            'id_teacher' => $user->id, // Associando o id do usuário ao professor
-            'carga_horaria' => 22,
-        ]); // Carga horária padrão
-        // Inicializando as horas com 0
-        // Acessando as horas do professor
+        if ($validator->fails()) {
+            foreach ($validator->errors()->all() as $message) {
+                Notification::make()
+                    ->title('Erro ao criar professor')
+                    ->body($message)
+                    ->danger()
+                    ->persistent()
+                    ->send();
+            }
 
-        // Associar o id_user ao professor
-        //     $data['id_user'] = $user->id;
+            throw ValidationException::withMessages($validator->errors()->toArray());
+        }
 
-        // Retorna os dados do professor com o id_user preenchido
+        // Criar o User
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $userData['email'],
+            'password' => Hash::make($userData['password']),
+        ]);
+
+        // Associar id_user ao professor
+        $data['id_user'] = $user->id;
+
         return $data;
     }
 
-    // Você pode adicionar um redirecionamento para a página de listagem
+    protected function afterCreate(): void
+    {
+        $record = $this->record;
+
+        TeacherHourCounter::create([
+            'id_teacher' => $record->id, // Agora já existe!
+            'carga_horaria' => 26,
+            'carga_componente_letiva' => 22,
+            'carga_componente_naoletiva' => 4,
+        ]);
+    }
+
     protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');

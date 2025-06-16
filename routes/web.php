@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
 
 
 
@@ -14,3 +16,8 @@ Route::get('/test-blade', function () {
 
 
 view('components.timeline.schedule-request')->render();
+
+Route::get('/logout', function () {
+    Auth::logout();
+    return redirect()->route('login');
+})->name('logout');

@@ -29,6 +29,7 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\View;
+use Closure;
 
 
 
@@ -68,29 +69,59 @@ class ScheduleRequestResource extends Resource
                     ->description('Preencha os campos abaixo para solicitar uma troca de horário.')
                     ->columns(1)
                     ->schema([
-                        select::make('id_teacher_requester')
-                            ->label('Requerente')
+                        Select::make('id_teacher_requester')
+                            ->label(fn($get) => $get('status') === 'Recusado' ? 'Recusado por' : 'Requerente')
                             ->relationship('requester', 'name')
-                            ->default(Filament::auth()->user()->teacher?->id)
+                            ->default(function ($record) {
+                                if ($record?->status === 'Recusado') {
+                                    return $record->scheduleConflict?->teacher?->id; // professor original
+                                }
+
+                                return Filament::auth()->user()->teacher?->id;
+                            })
                             ->disabled()
                             ->required()
                             ->searchable()
                             ->preload()
                             ->columnSpanFull(),
+
                         Select::make('status')
                             ->label('Estado do Pedido')
                             ->options([
                                 'Pendente' => 'Pendente',
                                 'Aprovado' => 'Aprovado',
                                 'Recusado' => 'Recusado',
+                                'Escalado' => 'Escalado',
+                                'Aprovado DP' => 'Aprovado DP',
+                                'Recusado DP' => 'Recusado DP',
                             ])
                             ->required()
+                            ->reactive() // importante para reatividade
                             ->disabled()
                             ->columnSpanFull(),
+
                         Textarea::make('justification')
                             ->label('Justificação do Pedido')
+                            ->visible(fn($get) => $get('status') === 'Pendente')
                             ->disabled()
-                            ->columnSpan('full'),
+                            ->columnSpanFull(),
+
+                        Textarea::make('response')
+                            ->label('Motivo da Recusa')
+                            ->visible(fn($get) => $get('status') === 'Recusado')
+                            ->disabled()
+                            ->columnSpanFull(),
+
+                        Textarea::make('response_coord')
+                            ->label('Notas de Aprovação')
+                            ->visible(fn($get) => $get('status') === 'Aprovado')
+                            ->disabled()
+                            ->columnSpanFull(),
+                        Textarea::make('justification_escalation')
+                            ->label('Notas de Aprovação')
+                            ->visible(fn($get) => $get('status') === 'Escalado')
+                            ->disabled()
+                            ->columnSpanFull(),
 
 
                     ]),
@@ -150,6 +181,9 @@ class ScheduleRequestResource extends Resource
                         'Pendente' => 'warning',
                         'Aprovado' => 'success',
                         'Recusado' => 'danger',
+                        'Escalado' => 'info',
+                        'Aprovado DP' => 'success',
+                        'Recusado DP' => 'danger',
                         default => 'gray',
                     })
                     ->sortable(),

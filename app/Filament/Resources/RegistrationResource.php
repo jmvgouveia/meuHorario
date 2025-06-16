@@ -177,7 +177,12 @@ class RegistrationResource extends Resource
                 //
             ])
             ->headerActions([
-                //  ImportAction::make()->importer(RegistrationImporter::class),
+                Tables\Actions\ImportAction::make()
+                    ->importer(RegistrationImporter::class)
+                    ->label('Import Registrations')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),])
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

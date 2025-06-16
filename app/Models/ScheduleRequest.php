@@ -15,7 +15,7 @@ class ScheduleRequest extends Model
         'status',
         'response',
         'response_coord',
-        'justification_escalda',
+        'justification_escalada',
 
         'responded_at',
     ];
@@ -35,7 +35,7 @@ class ScheduleRequest extends Model
         return $this->belongsTo(Teacher::class, 'id_teacher_requester');
     }
     public function teacher()
-{
-    return $this->belongsTo(Teacher::class, 'id_teacher');
-}
+    {
+        return $this->belongsTo(Teacher::class, 'id_teacher');
+    }
 }

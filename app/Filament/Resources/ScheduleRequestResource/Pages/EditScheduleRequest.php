@@ -52,7 +52,7 @@ class EditScheduleRequest extends EditRecord
                             ->options(fn() => $this->getAvailableRooms()),
 
                         Textarea::make('response')
-                            ->label('Justificação')
+                            ->label('Justificação 321')
                             ->required()
                             ->rows(4),
                     ])
@@ -74,16 +74,18 @@ class EditScheduleRequest extends EditRecord
                             ->success()
                             ->body('A troca foi aprovada.')
                             ->send();
+                        return redirect($this->getResource()::getUrl('index'));
                     });
             }
-
+            // Se não está aprovado, pode recusar
+            // (não pode recusar se já foi aprovado)
             if ($status !== 'Aprovado') {
                 $actions[] = Action::make('reject')
                     ->label('Recusar Troca')
                     ->color('danger')
                     ->form([
                         Textarea::make('response')
-                            ->label('Justificação')
+                            ->label('Justificação 123')
                             ->required()
                             ->rows(4),
                     ])
@@ -91,23 +93,25 @@ class EditScheduleRequest extends EditRecord
                         $this->record->update([
                             'status' => 'Recusado',
                             'response' => $data['response'],
+                            'response_at' => now(),
                         ]);
                         Notification::make()
                             ->title('Troca Recusada')
                             ->danger()
                             ->body('A troca foi recusada.')
                             ->send();
+                        return redirect($this->getResource()::getUrl('index'));
                     });
             }
         }
 
-        //
+        // ✅ Quem fez o pedido pode responder (se ainda não foi aprovado ou recusado)
         if ($isRequestOwner && $status === 'Recusado') {
             $actions[] = Action::make('escalar')
                 ->label('Escalar Situação')
                 ->color('warning')
                 ->form([
-                    Textarea::make('response')
+                    Textarea::make('justification_escalada')
                         ->label('Justificação para Escalar')
                         ->required()
                         ->rows(4),
@@ -115,13 +119,14 @@ class EditScheduleRequest extends EditRecord
                 ->action(function (array $data) {
                     $this->record->update([
                         'status' => 'Escalado',
-                        'justification_escalada' => $data['response'],
+                        'justification_escalada' => $data['justification_escalada'],
                     ]);
                     Notification::make()
                         ->title('Situação Escalada')
                         ->warning()
                         ->body('O pedido foi escalado para análise.')
                         ->send();
+                    return redirect($this->getResource()::getUrl('index'));
                 });
         }
 
@@ -159,6 +164,7 @@ class EditScheduleRequest extends EditRecord
 
     protected function getAvailableRooms(): array
     {
+
         $this->record->loadMissing('scheduleConflict.room');
 
         $conflict = $this->record->scheduleConflict;
@@ -167,15 +173,20 @@ class EditScheduleRequest extends EditRecord
         $idTimePeriod = $conflict->id_timeperiod;
         $idWeekday = $conflict->id_weekday;
 
-        if (!$edificioId || !$idTimePeriod || !$idWeekday) {
+
+        if (is_null($edificioId) || is_null($idTimePeriod) || is_null($idWeekday)) {
             return [];
         }
+
+        //   dd($edificioId, $idTimePeriod, $idWeekday);
 
         return Room::where('building_id', $edificioId)
             ->whereDoesntHave('schedules', function ($query) use ($idTimePeriod, $idWeekday) {
                 $query->where('id_timeperiod', $idTimePeriod)
                     ->where('id_weekday', $idWeekday);
             })
+            ->get()
+            ->unique('name')
             ->pluck('name', 'id')
             ->toArray();
     }

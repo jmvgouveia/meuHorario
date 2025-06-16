@@ -34,8 +34,14 @@ trait ChecksScheduleConflicts
 
         $this->checkTeacherScheduleConflict($teacher->id, $data['id_weekday'], $data['id_timeperiod'], $ignoreId);
 
-        if (!in_array($tipo, ['reunião', 'tee'])) {
-            $this->checkRoomScheduleConflict($data['id_room'], $data['id_weekday'], $data['id_timeperiod'], $ignoreId);
+
+        if ($subject && !in_array(strtolower((string) $subject->subject), ['reunião', 'tee'])) {
+            $this->checkRoomScheduleConflict(
+                $data['id_room'],
+                $data['id_weekday'],
+                $data['id_timeperiod'],
+                $ignoreId
+            );
         }
 
         $this->checkWorkload($teacher->id, $tipo);

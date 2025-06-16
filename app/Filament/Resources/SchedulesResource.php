@@ -52,6 +52,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkAction;
 use Illuminate\Support\Collection;
 use Filament\Tables\Actions\BulkAction as TablesBulkAction;
+use Filament\Forms\Components\Toggle;
 
 
 
@@ -96,7 +97,7 @@ class SchedulesResource extends Resource
                             $turmaAno = $registration->class->year;
 
                             $turmaAlunos[$turmaNome]['ano'] = $turmaAno;
-                            $turmaAlunos[$turmaNome]['alunos'][] = "{$student->studentnumber} - {$student->name}";
+                            $turmaAlunos[$turmaNome]['alunos'][] = "{$student->studentnumber}";
                         }
                     }
                 } else {
@@ -129,7 +130,7 @@ class SchedulesResource extends Resource
                         "\"{$schedule->teacher->teachernumber}\"",
                         "\"{$schedule->subject->acronym}\"",
                         "\"{$schedule->room->name}\"",
-                        "\"" . implode(' ; ', $info['alunos']) . "\"",
+                        "\"" . implode(',', $info['alunos']) . "\"",
                     ];
 
                     fputs($handle, implode('|', $linha) . "\n");
@@ -312,32 +313,157 @@ class SchedulesResource extends Resource
                                     ->pluck('class', 'id');
                             }),
 
+                        //         CheckboxList::make('students')
+                        //             ->label('Alunos matriculados na disciplina')
+                        //             ->helperText('Selecione os alunos que vão assistir à aula')
+                        //             ->reactive()
+                        //             ->afterStateHydrated(function (callable $set, ?\App\Models\Schedules $record) {
+                        //                 if ($record) {
+                        //                     $set('students', $record->students()->pluck('students.id')->toArray());
+                        //                 }
+                        //             })
+                        //             ->afterStateUpdated(function ($state, callable $set) {
+                        //                 $studentIds = is_array($state) ? $state : [];
+
+                        //                 if (count($studentIds) > 0) {
+                        //                     $numeros = \App\Models\Student::whereIn('id', $studentIds)
+                        //                         ->pluck('studentnumber')
+                        //                         ->sort()
+                        //                         ->implode(', ');
+
+                        //                     $set('turno', $numeros);
+                        //                 } else {
+                        //                     $set('turno', null); // Limpa se não houver alunos
+                        //                 }
+                        //             })
+                        //             ->columns(4)
+                        //             ->options(function (callable $get) {
+                        //                 $subjectId = $get('id_subject');
+                        //                 $classIds = $get('id_classes') ?? [];
+                        //                 $schoolYear = \App\Models\SchoolYears::where('active', true)->first();
+
+                        //                 if (!$subjectId || !$schoolYear) return [];
+
+                        //                 $registrationIds = DB::table('registrations_subjects')
+                        //                     ->where('id_subject', $subjectId)
+                        //                     ->pluck('id_registration');
+
+                        //                 if ($registrationIds->isEmpty()) return [];
+
+                        //                 $query = Registration::with('student')
+                        //                     ->whereIn('id', $registrationIds)
+                        //                     ->where('id_schoolyear', $schoolYear->id);
+
+                        //                 if (!empty($classIds)) {
+                        //                     $query->whereIn('id_class', $classIds);
+                        //                 }
+
+                        //                 return $query->get()->mapWithKeys(function ($registration) {
+                        //                     $student = $registration->student;
+                        //                     $turma = $registration->class?->class;
+                        //                     if (!$student) return [];
+
+                        //                     return [
+                        //                         $registration->id_student => "{$student->studentnumber} - {$student->name} - {$turma}",
+                        //                     ];
+                        //                 });
+                        //             }),
+
+                        //     ]),
+
+                        // Section::make('Turno (opcional)')
+                        //     ->description('Selecione o turno da turma ')
+                        //     ->schema([
+                        //         Select::make('turno')
+                        //             ->label('Turno')
+                        //             ->reactive()
+                        //             ->required(fn(callable $get) => !empty($get('students')))
+                        //             //->default('NA')
+                        //             ->options(function (callable $get) {
+                        //                 $alunoIds = $get('students');
+
+                        //                 if (!is_array($alunoIds)) {
+                        //                     $alunoIds = [];
+                        //                 }
+                        //                 if (count($alunoIds) > 0) {
+                        //                     $alunos = \App\Models\Student::whereIn('id', $alunoIds)
+                        //                         ->get()
+                        //                         ->sortBy('studentnumber')
+                        //                         ->map(fn($aluno) => "{$aluno->studentnumber} - {$aluno->name}")
+                        //                         ->implode(' ; ');
+
+                        //                     return [$alunos => "Turno: $alunos"];
+                        //                 }
+
+                        //                 return [
+                        //                     'turmaA' => 'Turma A',
+                        //                     'turmaB' => 'Turma B',
+                        //                     'turmaC' => 'Turma C',
+                        //                     'turmaD' => 'Turma D',
+                        //                 ];
+                        //             })
+                        //             ->placeholder('Em caso de ser a turma toda deixar em branco'),
+                        //     ]),
+
+                        //---
+                        Toggle::make('filtrar_por_turma')
+                            ->label('Filtrar alunos pelas turmas selecionadas')
+                            ->default(true)
+                            ->reactive(),
+
                         CheckboxList::make('students')
                             ->label('Alunos matriculados na disciplina')
                             ->helperText('Selecione os alunos que vão assistir à aula')
                             ->reactive()
+                            //----
                             ->afterStateHydrated(function (callable $set, ?\App\Models\Schedules $record) {
-                                if ($record) {
-                                    $set('students', $record->students()->pluck('students.id')->toArray());
+                                if ($record && $record->exists) {
+                                    $studentIds = $record->students()->pluck('students.id')->filter()->values()->toArray();
+
+                                    if (!empty($studentIds)) {
+                                        $set('students', $studentIds);
+                                    } else {
+                                        $set('students', []); // 👈 Garante array vazio, não booleano
+                                    }
+                                } else {
+                                    $set('students', []); // 👈 Criação de novo registo: valor seguro
                                 }
                             })
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if (!empty($state)) {
-                                    $numeros = \App\Models\Student::whereIn('id', $state)
+                            //----
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                $studentIds = is_array($state) ? $state : [];
+
+                                if (count($studentIds) > 0) {
+                                    // Define o turno sugerido
+                                    $numeros = \App\Models\Student::whereIn('id', $studentIds)
                                         ->pluck('studentnumber')
                                         ->sort()
                                         ->implode(', ');
 
                                     $set('turno', $numeros);
+
+                                    // Se não estiver a filtrar por turma, atualiza as turmas com base nos alunos
+                                    if (!$get('filtrar_por_turma')) {
+                                        $classIds = \App\Models\Registration::whereIn('id_student', $studentIds)
+                                            ->pluck('id_class')
+                                            ->unique()
+                                            ->filter()
+                                            ->values()
+                                            ->toArray();
+
+                                        $set('id_classes', $classIds);
+                                    }
                                 } else {
-                                    $set('turno', null); // Limpa se não houver alunos
+                                    $set('turno', null);
                                 }
+                                Log::debug('State dos alunos após update', ['state' => $state]);
                             })
                             ->columns(4)
                             ->options(function (callable $get) {
                                 $subjectId = $get('id_subject');
-                                $classIds = $get('id_classes') ?? [];
                                 $schoolYear = \App\Models\SchoolYears::where('active', true)->first();
+                                $classIds = $get('id_classes') ?? [];
+                                $filtrarPorTurma = $get('filtrar_por_turma');
 
                                 if (!$subjectId || !$schoolYear) return [];
 
@@ -347,58 +473,203 @@ class SchedulesResource extends Resource
 
                                 if ($registrationIds->isEmpty()) return [];
 
-                                $query = Registration::with('student')
+                                $query = \App\Models\Registration::with(['student', 'class'])
                                     ->whereIn('id', $registrationIds)
                                     ->where('id_schoolyear', $schoolYear->id);
 
-                                if (!empty($classIds)) {
+                                if ($filtrarPorTurma && !empty($classIds)) {
                                     $query->whereIn('id_class', $classIds);
                                 }
 
                                 return $query->get()->mapWithKeys(function ($registration) {
                                     $student = $registration->student;
-                                    $turma = $registration->class?->class;
+                                    $turma = $registration->class?->class ?? '—';
                                     if (!$student) return [];
 
                                     return [
-                                        $registration->id_student => "{$turma} - {$student->studentnumber} - {$student->name}",
+                                        $registration->id_student => "{$student->studentnumber} - {$student->name} - {$turma}",
                                     ];
                                 });
                             }),
 
+
+
+                        Section::make('Turno')
+                            ->description('Indique o turno da aula')
+                            ->schema([
+                                // Campo mostrado quando NÃO há alunos selecionados
+                                Select::make('turno')
+                                    ->label('Turno')
+                                    ->visible(function (callable $get) {
+                                        $students = $get('students');
+                                        return is_array($students) ? count($students) === 0 : true; // mostra se for array vazio ou não for array
+                                    })
+                                    ->options(function () {
+                                        $acronym = \Illuminate\Support\Facades\Auth::user()?->teacher?->acronym ?? '';
+                                        return [
+                                            "Turno A - $acronym" => "Turno A - $acronym",
+                                            "Turno B - $acronym" => "Turno B - $acronym",
+                                            "Turno C - $acronym" => "Turno C - $acronym",
+                                            "Turno D - $acronym" => "Turno D - $acronym",
+                                        ];
+                                    })
+                                    ->placeholder('Em caso de ser a turma toda, selecione o turno'),
+
+                                // Campo visível apenas quando há alunos selecionados
+                                TextInput::make('turno')
+                                    ->label('Turno Gerado (automático)')
+                                    ->visible(function (callable $get) {
+                                        $students = $get('students');
+                                        return is_array($students) && count($students) > 0;
+                                    })
+                                    ->extraAttributes(['readonly' => true])
+                                    ->default(fn(callable $get, ?\App\Models\Schedules $record) => $get('turno') ?? $record?->turno)
+                                    ->placeholder('Será preenchido automaticamente com os números dos alunos'),
+                            ]),
+
+
+
+
+
+                        // CheckboxList::make('students')
+                        //     ->label('Alunos matriculados na disciplina')
+                        //     ->helperText('Selecione os alunos que vão assistir à aula')
+                        //     ->reactive()
+                        //     // ->afterStateHydrated(function (callable $set, callable $get, ?\App\Models\Schedules $record) {
+                        //     //     if ($record && empty($get('students'))) {
+                        //     //         $set('students', $record->students()->pluck('students.id')->toArray());
+                        //     //     }
+                        //     // })
+                        //     ->afterStateUpdated(function ($state, callable $set) {
+                        //         $studentIds = is_array($state) ? $state : [];
+
+                        //         if (count($studentIds) > 0) {
+                        //             $numeros = \App\Models\Student::whereIn('id', $studentIds)
+                        //                 ->pluck('studentnumber')
+                        //                 ->sort()
+                        //                 ->implode(', ');
+
+                        //             $set('turno_sugerido', $numeros);
+                        //         } else {
+                        //             $set('turno_sugerido', null);
+                        //         }
+                        //     })
+                        //     ->columns(4)
+                        //     ->options(function (callable $get) {
+                        //         $subjectId = $get('id_subject');
+                        //         $classIds = $get('id_classes') ?? [];
+                        //         $schoolYear = \App\Models\SchoolYears::where('active', true)->first();
+
+                        //         if (!$subjectId || !$schoolYear) return [];
+
+                        //         $registrationIds = DB::table('registrations_subjects')
+                        //             ->where('id_subject', $subjectId)
+                        //             ->pluck('id_registration');
+
+                        //         if ($registrationIds->isEmpty()) return [];
+
+                        //         $query = Registration::with('student')
+                        //             ->whereIn('id', $registrationIds)
+                        //             ->where('id_schoolyear', $schoolYear->id);
+
+                        //         if (!empty($classIds)) {
+                        //             $query->whereIn('id_class', $classIds);
+                        //         }
+
+                        //         return $query->get()->mapWithKeys(function ($registration) {
+                        //             $student = $registration->student;
+                        //             $turma = $registration->class?->class;
+                        //             if (!$student) return [];
+
+                        //             return [
+                        //                 $registration->id_student => "{$student->studentnumber} - {$student->name} - {$turma}",
+                        //             ];
+                        //         });
+                        //     }),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        // Section::make('Turno')
+                        //     ->description('Indique o turno da aula')
+                        //     ->schema([
+                        //         // Campo mostrado quando NÃO há alunos selecionados
+                        //         Select::make('turno')
+                        //             ->label('Turno')
+                        //             ->visible(fn(callable $get) => count($get('students') ?? []) === 0)
+                        //             //->visible(fn(callable $get) => is_array($get('students')) && count($get('students')) === 0)
+
+                        //             ->options(function () {
+                        //                 $acronym = \Illuminate\Support\Facades\Auth::user()?->teacher?->acronym ?? '';
+                        //                 return [
+                        //                     "Turno A - $acronym" => "Turno A - $acronym",
+                        //                     "Turno B - $acronym" => "Turno B - $acronym",
+                        //                     "Turno C - $acronym" => "Turno C - $acronym",
+                        //                     "Turno D - $acronym" => "Turno D - $acronym",
+                        //                 ];
+                        //             })
+                        //             ->placeholder('Em caso de ser a turma toda, selecione o turno'),
+
+                        //         // Campo visível apenas quando há alunos selecionados
+
+                        //         //---
+
+                        //         TextInput::make('turno')
+                        //             ->label('Turno Gerado (automático)')
+                        //             ->visible(fn(callable $get) => is_array($get('students')) && count($get('students')) > 0)
+                        //             ->extraAttributes(['readonly' => true])
+                        //             ->default(fn(callable $get, ?\App\Models\Schedules $record) => $get('turno') ?? $record?->turno)
+                        //             ->placeholder('Será preenchido automaticamente com os números dos alunos'),
+
+
+                        //         //---
+
+
+
+
+
+
+
+
+
+                        // TextInput::make('turno')
+                        //     ->label('Turno Gerado (automático)')
+                        //     ->visible(fn(callable $get) => is_array($get('students')) && count($get('students')) === 0)
+                        //     // ->disabled()
+                        //     ->extraAttributes(['readonly' => true])
+                        //     ->default(fn(callable $get, ?\App\Models\Schedules $record) => $get('turno') ?? $record?->turno)
+
+                        //     //->dehydrated(false) // não guarda este campo
+                        //     ->placeholder('Será preenchido automaticamente com os números dos alunos'),
+                        // ])
+
                     ]),
 
-                Section::make('Turno (opcional)')
-                    ->description('Selecione o turno da turma ')
-                    ->schema([
-                        Select::make('turno')
-                            ->label('Turno')
-                            ->reactive()
-                            ->required(fn(callable $get) => !empty($get('students')))
-                            //->default('NA')
-                            ->options(function (callable $get) {
-                                $alunoIds = $get('students') ?? [];
+
+                //---
 
 
-                                if (count($alunoIds) > 0) {
-                                    $alunos = \App\Models\Student::whereIn('id', $alunoIds)
-                                        ->get()
-                                        ->sortBy('studentnumber')
-                                        ->map(fn($aluno) => "{$aluno->studentnumber} - {$aluno->name}")
-                                        ->implode(' ; ');
 
-                                    return [$alunos => "Turno: $alunos"];
-                                }
 
-                                return [
-                                    'turmaA' => 'Turma A',
-                                    'turmaB' => 'Turma B',
-                                    'turmaC' => 'Turma C',
-                                    'turmaD' => 'Turma D',
-                                ];
-                            })
-                            ->placeholder('Em caso de ser a turma toda deixar em branco'),
-                    ]),
 
                 ActionGroup::make([
                     Action::make('justificarConflito')
@@ -439,11 +710,13 @@ class SchedulesResource extends Resource
                     ->searchable(),
                 TextColumn::make('subject.subject')
                     ->label('Disciplina')
+                    ->wrap()
                     ->sortable()
                     ->toggleable()
                     ->searchable(),
                 TextColumn::make('classes.class')
                     ->label('Turma')
+                    ->wrap()
                     ->sortable()
                     ->toggleable()
                     ->searchable(),
@@ -466,6 +739,9 @@ class SchedulesResource extends Resource
                         'Pendente' => 'warning',
                         'Aprovado' => 'success',
                         'Recusado' => 'danger',
+                        'Escalado' => 'info',
+                        'Aprovado DP' => 'success',
+                        'Recusado DP' => 'danger',
                         default => 'gray',
                     })
                     ->searchable(),

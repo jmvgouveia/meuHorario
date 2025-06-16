@@ -12,6 +12,7 @@ use App\Models\TimePeriod;
 use Filament\Facades\Filament;  // <-- Importar aqui
 
 
+
 class WeeklyScheduleWidget extends Widget
 {
     protected static string $view = 'filament.widgets.weekly-schedule-widget';
@@ -78,8 +79,23 @@ class WeeklyScheduleWidget extends Widget
                 return $carry;
             }, collect());
 
+        $PedidosAprovadosDP = \App\Models\ScheduleRequest::where('status', 'Aprovado DP')
+            ->get()
+            ->reduce(function ($carry, $req) {
+                $carry[$req->id_schedule_conflict] = $req;
+                $carry[$req->id_schedule_novo] = $req;
+                return $carry;
+            }, collect());
+
+        $AprovadosDP = Schedules::where('status', 'Aprovado DP')
+            ->get()
+            ->keyBy('id');
+        // dd($AprovadosDP->keys());
+
+        // dd(Schedules::where('status', 'Aprovado DP')->get());
+
         // Retorna a view com o calendário, dias da semana e períodos de tempo
-        return view(static::$view, compact('calendar', 'weekdays', 'timePeriods', 'recusados', 'escalados'))
+        return view(static::$view, compact('calendar', 'weekdays', 'timePeriods', 'recusados', 'escalados', 'PedidosAprovadosDP', 'AprovadosDP'))
             ->with('teacher', $teacher);
     }
 }

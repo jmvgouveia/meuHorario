@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\TeacherHourCounterImporter;
 use App\Filament\Resources\TeacherHourCounterResource\Pages;
 use App\Filament\Resources\TeacherHourCounterResource\RelationManagers;
 use App\Models\TeacherHourCounter;
@@ -122,6 +123,14 @@ class TeacherHourCounterResource extends Resource
             ])
             ->filters([
                 //
+            ])
+            ->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(TeacherHourCounterImporter::class)
+                    ->label('Import Teacher Hours')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success'),
+                // Tables\Actions\CreateAction::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
