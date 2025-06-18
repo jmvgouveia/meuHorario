@@ -86,14 +86,5 @@ return [
 
     'livewire_loading_delay' => 'default',
 
-    'brand' => [
-        'logo' => asset('images/logo_meuHorario.png'),
-        'favicon' => asset('images/meuHorario.ico'), // opcional
-        'name' => 'meuHorário',
-    ],
 
-    'auth' => [
-        'logo' => 'images/logo_meuHorario.png', // <-- Caminho relativo à pasta /public
-    ],
-    'name' => 'meuHorário',
 ];

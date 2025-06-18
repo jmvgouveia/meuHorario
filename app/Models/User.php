@@ -78,4 +78,8 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'id_user', 'id_role');
     }
+    // public function notifications()
+    // {
+    //     return $this->hasMany(Notification::class);
+    // }
 }

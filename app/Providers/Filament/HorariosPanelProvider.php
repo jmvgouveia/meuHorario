@@ -34,18 +34,6 @@ class HorariosPanelProvider extends PanelProvider
             ->path('horarios')
             //   ->viteTheme('resources/css/filament/horarios/theme.css')
             ->login()
-            ->userMenuItems([
-                UserMenuItem::make()
-                    ->label('Minha Conta')
-                    ->url(fn() => UserResource::getUrl('edit', ['record' => auth()->id()]))
-                    ->icon('heroicon-o-user'),
-
-                // UserMenuItem::make()
-                //     ->label('Terminar Sessão')
-                //     ->url('/horarios/logout') // ou apenas '/logout' se preferires
-                //     ->icon('heroicon-o-arrow-left-on-rectangle')
-                //     ->color('danger'),
-            ])
             ->colors([
                 'primary' => Color::Amber,
             ])

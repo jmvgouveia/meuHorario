@@ -31,6 +31,10 @@ use App\Filament\Resources\SchedulesResource;
 use App\Filament\Widgets\DocentesOverview;
 use App\Filament\Widgets\StudentsOverview;
 use App\Models\Student;
+use App\Filament\Resources\UserResource;
+use Filament\Navigation\MenuItem;
+
+
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -40,6 +44,13 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->default()
+            ->databaseNotifications()
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Minha Conta')
+                    ->url(fn() => \App\Filament\Resources\UserResource::getUrl('edit', ['record' => Filament::auth()->id()]))
+                    ->icon('heroicon-o-user'),
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])

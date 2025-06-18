@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Filament\Widgets\WeeklyScheduleWidget;
 use Filament\Facades\Filament;
+use App\Models\ScheduleRequest;
+use App\Observers\ScheduleRequestObserver;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +24,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-   
+        ScheduleRequest::observe(ScheduleRequestObserver::class);
     }
 }
