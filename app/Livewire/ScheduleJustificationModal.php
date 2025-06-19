@@ -8,6 +8,9 @@ use App\Models\Schedules;
 use App\Models\Teacher;
 use App\Models\SchoolYears;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
+use Mockery\Matcher\Not;
+
 
 class ScheduleJustificationModal extends Component
 {
@@ -61,7 +64,39 @@ class ScheduleJustificationModal extends Component
         $this->visible = false;
         $this->justification = '';
 
-        Filament::notify('success', 'Pedido de troca criado com sucesso!');
+        // Filament::notify('success', 'Pedido de troca criado com sucesso!');
+
+
+        // $currentRoom = $conflictingSchedule->room?->name ?? 'desconhecida';
+        // $requester = $this->record->requester?->user;
+        // $requesterName = $this->record->requester?->name ?? 'desconhecido';
+        // $owner = $this->record->scheduleConflict?->teacher?->user;
+        // $ownername = $owner?->name ?? 'desconhecido';
+
+        // Notification::make()
+        //     ->title("Pedido de troca criado com sucesso!")
+        //     ->body("O seu pedido de troca foi enviado com sucesso para {$ownername} Horário: {$conflictingSchedule->weekday->name} às {$conflictingSchedule->timeperiod->name}.")
+        //     ->success()
+        //     ->sendToDatabase($requester);
+
+        // // Notificação para o usuário que criou o pedido de troca
+
+        // Notification::make()
+        //     ->title('Pedido de troca criado')
+        //     ->body('O seu pedido de troca foi enviado com sucesso.')
+        //     ->success()
+        //     ->send();
+        // // Notificação para o professor que receberá o pedido de troca
+        // // Envia notificação para o professor que receberá o pedido de troca
+
+        // Notification::make()
+        //     ->title('Pedido de troca Recebido')
+        //     ->body("O utilizador {$requesterName} está a pedir para trocar a sua aula na sala {$currentRoom} por outra.")
+        //     ->success()
+        //     ->sendToDatabase($owner);
+
+
+
 
         $this->emit('refreshSchedulesTable'); // se quiseres refrescar lista na UI
     }

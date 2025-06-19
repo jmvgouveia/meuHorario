@@ -14,8 +14,9 @@ use Filament\Notifications\Notification;
 use App\Models\Room;
 use Filament\Facades\Filament; // Importar aqui
 use Illuminate\Database\Eloquent\Builder;
-
-
+use App\Models\User;
+use Mockery\Matcher\Not;
+use App\Filament\Resources\SchedulesResource;
 
 class EditScheduleRequestResolveConflict extends EditRecord
 {
@@ -52,7 +53,7 @@ class EditScheduleRequestResolveConflict extends EditRecord
                         ->options(fn() => $this->getAvailableRooms()),
 
                     Textarea::make('response_coord')
-                        ->label('Justificação 123')
+                        ->label('Justificação para Aprovação DP')
                         ->required()
                         ->rows(4),
                 ])
@@ -71,11 +72,39 @@ class EditScheduleRequestResolveConflict extends EditRecord
                         'status' => 'Aprovado',
                     ]);
 
+
+
+
+                    $salaAntiga = $schedule?->room?->name ?? 'desconhecida';
+                    $salaNova = \App\Models\Room::find($data['id_room_novo'])?->name ?? 'desconhecida';
+                    $requester = $this->record->requester?->user;
+                    $requestername = $this->record->requester?->name ?? 'desconhecido';
+                    $owner = $this->record->scheduleConflict?->teacher?->user;
+                    $ownername = $owner?->name ?? 'desconhecido';
+
+
+
+
                     Notification::make()
                         ->title('Troca Aprovada')
                         ->success()
-                        ->body('A troca foi aprovada com sucesso.')
+                        ->body("O pedido foi aprovado. {$requestername} sala: {$salaAntiga} | {$ownername} sala: {$salaNova}.")
                         ->send();
+
+                    Notification::make()
+                        ->title('Pedido de troca aprovado por Direção Pedagógica')
+                        ->success()
+                        ->body("O seu pedido de troca da sala {$salaAntiga} para {$salaNova} foi aprovado.")
+                        ->sendToDatabase($requester); // Envia e armazena no banco de dados
+
+                    Notification::make()
+                        ->title('Pedido de troca aprovado por Direção Pedagógica')
+                        ->success()
+                        ->body("Aprovou o pedido de {$requestername} na troca da sala {$salaAntiga} para {$salaNova}.")
+                        ->sendToDatabase($owner); // Envia e armazena no banco de dados
+
+                    // Atualiza numero de horas
+                    // SchedulesResource::hoursCounterUpdate($this->record->scheduleNovo, true);
                 }),
 
             Action::make('recusar')
@@ -84,7 +113,7 @@ class EditScheduleRequestResolveConflict extends EditRecord
                 ->requiresConfirmation()
                 ->form([
                     Textarea::make('response_coord')
-                        ->label('Justificação 321')
+                        ->label('Justificação para Recusa DP')
                         ->required()
                         ->rows(4),
                 ])
@@ -94,12 +123,51 @@ class EditScheduleRequestResolveConflict extends EditRecord
                         'response_coord' => $data['response_coord'],
                     ]);
 
+                    // Atualiza o status do scheduleConflict para "Recusado DP"
+                    // e mantém a sala original
+                    $this->record->scheduleNovo?->update([
+                        'status' => 'Recusado DP',
+                    ]);
+
+
+                    $this->record->scheduleConflict?->update([
+                        'status' => 'Aprovado',
+                        // 'id_room' => $data['id_room_novo'],
+                    ]);
+
+                    $schedule = $this->record->scheduleConflict;
+                    $salaAntiga = $schedule?->room?->name ?? 'desconhecida';
+                    $salaNova = $this->record->scheduleNovo?->room?->name ?? 'não definida';
+                    $requester = $this->record->requester?->user;
+                    $requestername = $this->record->requester?->name ?? 'desconhecido';
+                    $owner = $this->record->scheduleConflict?->teacher?->user;
+                    $ownername = $owner?->name ?? 'desconhecido';
+
                     Notification::make()
-                        ->title('Pedido recusado')
+                        ->title('Troca Recusada')
                         ->danger()
-                        ->body('A troca foi recusada.')
+                        ->body("O pedido foi recusado. {$requestername} sala: {$salaAntiga} | {$ownername} sala: {$salaNova}.")
                         ->send();
+
+                    Notification::make()
+                        ->title('Pedido de troca recusado por Direção Pedagógica')
+                        ->danger()
+                        ->body("O seu pedido de troca da sala {$salaAntiga} para {$salaNova} foi recusado.")
+                        ->sendToDatabase($requester); // Envia e armazena no banco de dados
+
+                    Notification::make()
+                        ->title('Pedido de troca recusado por Direção Pedagógica')
+                        ->danger()
+                        ->body("Recusou o pedido de {$requestername} na troca da sala {$salaAntiga} para {$salaNova}.")
+                        ->sendToDatabase($owner); // Envia e armazena no banco de dados
+
+
                 }),
+
+
+
+
+            $this->getCancelFormAction(), // Botão "Cancelar"
         ];
     }
 

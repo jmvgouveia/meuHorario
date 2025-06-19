@@ -16,6 +16,11 @@ use App\Models\SchoolYears;
 use App\Models\Teacher;
 use App\Models\Registration;
 use App\Models\Student;
+use App\Models\TeacherHourCounter;
+use App\Models\TeacherSubject;
+use App\Models\TeacherCourse;
+use App\Models\Course;
+use App\Models\ScheduleRequest;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 use Dom\Text;
@@ -61,9 +66,8 @@ use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Actions\DeleteAction as ActionsDeleteAction;
 use Filament\Tables\Actions\Action as ActionsAction;
 use Filament\Tables\Actions;
-
-
-
+use PhpOffice\PhpSpreadsheet\Calculation\Logical\Boolean;
+use PhpParser\Node\Expr\Cast\Bool_;
 
 class SchedulesResource extends Resource
 {
@@ -77,9 +81,97 @@ class SchedulesResource extends Resource
     public ?Schedule $conflictingSchedule = null;
 
 
+    // public static function exportSchedules(?Collection $records = null): StreamedResponse
+    // {
+    //     $schedules = ($records ?? \App\Models\Schedules::query())
+    //         ->whereIn('status', ['Aprovado', 'Aprovado DP'])
+    //         ->with(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes', 'students'])
+    //         ->get();
+
+    //     $now = now()->format('Y-m-d_H-i');
+    //     $filename = "horarios-{$now}.txt";
+
+    //     return response()->streamDownload(function () use ($schedules) {
+    //         $handle = fopen('php://output', 'w');
+
+    //         foreach ($schedules as $schedule) {
+    //             $turmaAlunos = [];
+
+    //             // Verifica se há alunos selecionados
+    //             if ($schedule->students->isNotEmpty()) {
+    //                 foreach ($schedule->students as $student) {
+    //                     $registration = \App\Models\Registration::where('id_student', $student->id)
+    //                         ->where('id_schoolyear', $schedule->id_schoolyear)
+    //                         ->whereIn('id_class', $schedule->classes->pluck('id'))
+    //                         ->with('class')
+    //                         ->first();
+
+    //                     if ($registration && $registration->class) {
+    //                         $turmaNome = $registration->class->class;
+    //                         $turmaAno = $registration->class->year;
+
+    //                         $turmaAlunos[$turmaNome]['ano'] = $turmaAno;
+    //                         $turmaAlunos[$turmaNome]['alunos'][] = "{$student->studentnumber}";
+    //                     }
+    //                 }
+    //             } else {
+    //                 // Se não há alunos, exporta turmas com campo de turno vazio
+    //                 foreach ($schedule->classes as $class) {
+    //                     $linha = [
+    //                         $schedule->id_weekday + 2, // Ajusta o dia da semana para começar em 2 = segunda-feira
+    //                         $schedule->id_timeperiod,
+    //                         "\"{$class->class}\"",
+    //                         $class->year,
+    //                         "\"{$schedule->teacher->teachernumber}\"",
+    //                         "\"{$schedule->subject->acronym}\"",
+    //                         "\"{$schedule->room->name}\"",
+    //                         "\"\"", // Turno vazio
+    //                     ];
+
+    //                     fputs($handle, implode('|', $linha) . "\n");
+    //                 }
+
+    //                 continue; // Passa para o próximo horário
+    //             }
+
+    //             // Gera linhas por turma com alunos
+    //             foreach ($turmaAlunos as $turma => $info) {
+    //                 $linha = [
+    //                     $schedule->id_weekday + 2,
+    //                     $schedule->id_timeperiod,
+    //                     "\"$turma\"",
+    //                     $info['ano'],
+    //                     "\"{$schedule->teacher->teachernumber}\"",
+    //                     "\"{$schedule->subject->acronym}\"",
+    //                     "\"{$schedule->room->name}\"",
+    //                     "\"" . implode(',', $info['alunos']) . "\"",
+    //                 ];
+
+    //                 fputs($handle, implode('|', $linha) . "\n");
+    //             }
+    //         }
+
+    //         fclose($handle);
+    //     }, $filename, [
+    //         'Content-Type' => 'text/plain',
+    //         'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+    //     ]);
+    // }
+
+
     public static function exportSchedules(?Collection $records = null): StreamedResponse
     {
-        $schedules = $records ?? \App\Models\Schedules::with(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes', 'students'])->get();
+        if ($records) {
+            // Se os registros foram passados (bulk action), faz eager loading manual
+            $schedules = $records->load(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes', 'students'])
+                ->whereIn('status', ['Aprovado', 'Aprovado DP']);
+        } else {
+            // Se não, faz a query completa
+            $schedules = \App\Models\Schedules::query()
+                ->whereIn('status', ['Aprovado', 'Aprovado DP'])
+                ->with(['teacher', 'room', 'subject', 'weekday', 'timePeriod', 'classes', 'students'])
+                ->get();
+        }
 
         $now = now()->format('Y-m-d_H-i');
         $filename = "horarios-{$now}.txt";
@@ -90,7 +182,6 @@ class SchedulesResource extends Resource
             foreach ($schedules as $schedule) {
                 $turmaAlunos = [];
 
-                // Verifica se há alunos selecionados
                 if ($schedule->students->isNotEmpty()) {
                     foreach ($schedule->students as $student) {
                         $registration = \App\Models\Registration::where('id_student', $student->id)
@@ -108,29 +199,27 @@ class SchedulesResource extends Resource
                         }
                     }
                 } else {
-                    // Se não há alunos, exporta turmas com campo de turno vazio
                     foreach ($schedule->classes as $class) {
                         $linha = [
-                            $schedule->id_weekday + 2, // Ajusta o dia da semana para começar em 2 = segunda-feira
+                            $schedule->id_weekday + 2,
                             $schedule->id_timeperiod,
                             "\"{$class->class}\"",
                             $class->year,
                             "\"{$schedule->teacher->teachernumber}\"",
                             "\"{$schedule->subject->acronym}\"",
                             "\"{$schedule->room->name}\"",
-                            "\"\"", // Turno vazio
+                            "\"\"",
                         ];
 
                         fputs($handle, implode('|', $linha) . "\n");
                     }
 
-                    continue; // Passa para o próximo horário
+                    continue;
                 }
 
-                // Gera linhas por turma com alunos
                 foreach ($turmaAlunos as $turma => $info) {
                     $linha = [
-                        $schedule->id_weekday,
+                        $schedule->id_weekday + 2,
                         $schedule->id_timeperiod,
                         "\"$turma\"",
                         $info['ano'],
@@ -150,6 +239,9 @@ class SchedulesResource extends Resource
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
+
+
+
 
     // Filtrar os horários para mostrar apenas os do professor autenticado
     public static function getEloquentQuery(): Builder
@@ -515,30 +607,38 @@ class SchedulesResource extends Resource
                     ->color('primary')
                     ->requiresConfirmation(),
             ])
-            ->actions([
-                DeleteAction::make()
-                    ->requiresConfirmation()
-                    ->after(function ($record) {
-                        SchedulesResource::hoursCounterUpdate($record);
-                    }),
-            ])
+            // ->actions([
+            //     DeleteAction::make()
+            //         ->requiresConfirmation()
+            //         ->after(function ($record) {
+            //             SchedulesResource::hoursCounterUpdate($record);
+            //         }),
+            // ])
 
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make()
                     ->after(function (Collection $records) {
                         foreach ($records as $record) {
-                            SchedulesResource::hoursCounterUpdate($record);
+
+                            SchedulesResource::rollbackScheduleRequest($record);
+                            SchedulesResource::hoursCounterUpdate($record, True);
                         }
                     }),
 
                 BulkAction::make('exportar_selecionados')
-                    ->label('Exportar Selecionados (.txt)')
+                    ->label('Exportar Selecionados')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn(Collection $records) => self::exportSchedules($records))
             ]);
     }
 
-    public static function hoursCounterUpdate(Schedules $schedule): void
+    public static function rollbackScheduleRequest(Schedules $schedule): void
+    {
+        ScheduleRequest::where('id_schedule_novo', $schedule->id)->delete();
+    }
+
+
+    public static function hoursCounterUpdate(Schedules $schedule, Bool $plusOrMinus): void
     {
         $schedule->load('subject');
 
@@ -550,13 +650,24 @@ class SchedulesResource extends Resource
             return;
         }
 
-        if ($tipo === 'nao letiva') {
-            $counter->carga_componente_naoletiva += 1;
-            $componente = 'Não Letiva';
+        if ($plusOrMinus) {
+            if ($tipo === 'nao letiva') {
+                $counter->carga_componente_naoletiva += 1;
+                $componente = 'Não Letiva';
+            } else {
+                $counter->carga_componente_letiva += 1;
+                $componente = 'Letiva';
+            }
         } else {
-            $counter->carga_componente_letiva += 1;
-            $componente = 'Letiva';
+            if ($tipo === 'nao letiva') {
+                $counter->carga_componente_naoletiva -= 1;
+                $componente = 'Não Letiva';
+            } else {
+                $counter->carga_componente_letiva -= 1;
+                $componente = 'Letiva';
+            }
         }
+
 
         $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
         $counter->save();

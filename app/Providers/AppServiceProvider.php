@@ -22,8 +22,5 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
-    {
-        ScheduleRequest::observe(ScheduleRequestObserver::class);
-    }
+    public function boot(): void {}
 }

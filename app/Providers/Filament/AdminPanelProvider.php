@@ -44,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->default()
+            ->login()
             ->databaseNotifications()
             ->userMenuItems([
                 MenuItem::make()

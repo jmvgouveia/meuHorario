@@ -19,7 +19,8 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Textarea;
-
+use Illuminate\Console\Scheduling\Schedule;
+use Mockery\Matcher\Not;
 
 class EditSchedules extends EditRecord
 {
@@ -64,29 +65,56 @@ class EditSchedules extends EditRecord
         $record->students()->sync($this->data['students'] ?? []);
     }
 
-    // public function getActions(): array
+
+    // public static function rollbackScheduleRequest(Schedules $schedule): void
     // {
-    //     return [
-    //         Actions\DeleteAction::make(),
-    //         // Actions\ViewAction::make(), // se quiseres
-    //     ];
+    //     ScheduleRequest::where(function ($query) use ($schedule) {
+    //         $query->where('id_schedule_conflict', $schedule->id)
+    //             ->orWhere('id_schedule_novo', $schedule->id);
+    //     })->update(['status' => 'Eliminado']);
     // }
-    public function getDeleteFormAction(): DeleteAction
-    {
-        return DeleteAction::make()
-            ->after(function () {
-                SchedulesResource::hoursCounterUpdate($this->record);
-            });
-    }
 
     public function getFormActions(): array
     {
         return [
-            $this->getSaveFormAction(),   // Botão "Guardar"
-            $this->getDeleteFormAction(), // ✅ Botão "Apagar"
+            $this->getSaveFormAction(),
+
+            DeleteAction::make()
+                ->label('Eliminar Horário')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->action(function () {
+
+
+                    SchedulesResource::rollbackScheduleRequest($this->record);
+
+                    if ($this->record->status !== 'Pendente') {
+
+                        SchedulesResource::hoursCounterUpdate($this->record, true);
+                    }
+
+
+                    $this->record->delete();
+
+                    Notification::make()
+                        ->title("Eliminou o Horário com ID: {$this->record->id} com sucesso.")
+                        ->success()
+                        ->sendToDatabase(Filament::auth()->user());
+
+                    Notification::make()
+                        ->title('Horário Eliminado')
+                        ->body('O horário foi eliminado com sucesso.')
+                        ->success()
+                        ->send();
+                    $this->redirect(filament()->getUrl()); // 👈 redireciona para o "main"
+                }),
+
+
+
             $this->getCancelFormAction(), // Botão "Cancelar"
         ];
     }
+
     protected function getRecordActions(): array
     {
         return [
@@ -105,7 +133,10 @@ class EditSchedules extends EditRecord
                             ->required()
                             ->minLength(10),
                     ])
-                    ->action(fn(array $data, $livewire) => $livewire->submitJustification($data)),
+                    ->action(function (array $data, $livewire) {
+                        $livewire->submitJustification($data);
+                        //return redirect()->route('filament.admin.pages.dashboard');
+                    })
             ]),
         ];
     }

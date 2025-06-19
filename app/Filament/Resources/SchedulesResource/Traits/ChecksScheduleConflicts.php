@@ -32,6 +32,12 @@ trait ChecksScheduleConflicts
             throw new Halt('Professor não encontrado.');
         }
 
+        if (!empty($data['students']) && is_array($data['students'])) {
+            foreach ($data['students'] as $studentId) {
+                $this->checkStudentScheduleConflict($studentId, $data['id_weekday'], $data['id_timeperiod'], $ignoreId);
+            }
+        }
+
         $this->checkTeacherScheduleConflict($teacher->id, $data['id_weekday'], $data['id_timeperiod'], $ignoreId);
 
 
@@ -51,11 +57,14 @@ trait ChecksScheduleConflicts
     {
         $query = Schedules::where('id_teacher', $idTeacher)
             ->where('id_weekday', $weekday)
-            ->where('id_timeperiod', $timeperiod);
+            ->where('id_timeperiod', $timeperiod)
+            ->where('status', '!=', 'Recusado DP') // Exclude pending schedules
+            ->where('status', '!=', 'Eliminado')
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId));
 
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
+        // if ($ignoreId) {
+        //     $query->where('id', '!=', $ignoreId);
+        // }
 
         if ($query->exists()) {
             Notification::make()
@@ -69,24 +78,62 @@ trait ChecksScheduleConflicts
         }
     }
 
+    private function checkStudentScheduleConflict(int $idStudent, int $weekday, int $timeperiod, ?int $ignoreId = null): void
+    {
+        $query = Schedules::whereHas('students', function ($q) use ($idStudent) {
+            $q->where('id_student', $idStudent);
+        })
+            ->where('id_weekday', $weekday)
+            ->where('id_timeperiod', $timeperiod)
+            ->whereNotIn('status', ['Recusado DP', 'Eliminado'])
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId));
+
+        if ($query->exists()) {
+            Notification::make()
+                ->title('Conflito de horário detetado')
+                ->body("O aluno já tem uma atividade marcada neste horário.")
+                ->warning()
+                ->persistent()
+                ->send();
+
+            throw new Halt('Erro: O aluno já tem uma atividade neste horário.');
+        }
+    }
+
+
+
     private function checkRoomScheduleConflict(int $idRoom, int $weekday, int $timeperiod, ?int $ignoreId = null): void
     {
+
+
         $query = Schedules::where('id_room', $idRoom)
             ->where('id_weekday', $weekday)
-            ->where('id_timeperiod', $timeperiod);
+            ->where('id_timeperiod', $timeperiod)
+            ->whereNotIn('status', ['Recusado DP', 'Eliminado'])
+            // ->where('status', '!=', 'Recusado DP') // Exclude pending schedules
+            // ->where('status', '!=', 'Eliminado')
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId));
 
-        if ($ignoreId) {
-            $query->where('id', '!=', $ignoreId);
-        }
+
+
+
+
+        // $query = Schedules::where('id_room', $idRoom)
+        //     ->where('id_weekday', $weekday)
+        //     ->where('id_timeperiod', $timeperiod);
+
+        // if ($ignoreId) {
+        //     $query->where('id', '!=', $ignoreId);
+        // }
 
         $this->conflictingSchedule = $query->with('teacher')->first();
 
         if ($this->conflictingSchedule) {
-            $prof = $conflict->teacher->name ?? 'outro professor';
+            $prof = $this->conflictingSchedule->teacher->name ?? 'outro professor';
 
             Notification::make()
-                ->title('Conflito de horário detetado')
-                ->body("Já existe um agendamento para esta sala com $prof.")
+                ->title("Conflito com: $prof")
+                ->body("Já existe um agendamento nesta sala e horário. Altere o horário, a sala ou solicite troca.")
                 ->warning()
                 ->persistent()
                 ->send();
@@ -114,7 +161,7 @@ trait ChecksScheduleConflicts
             if ($counter->carga_componente_naoletiva <= 0) {
                 Notification::make()
                     ->title('Sem horas disponíveis')
-                    ->body('Sem horas disponíveis na componente **não letiva**.')
+                    ->body('Sem horas disponíveis na componente NÃO LETIVA.')
                     ->warning()
                     ->persistent()
                     ->send();
@@ -125,7 +172,7 @@ trait ChecksScheduleConflicts
             if ($counter->carga_componente_letiva <= 0) {
                 Notification::make()
                     ->title('Sem horas disponíveis')
-                    ->body('Sem horas disponíveis na componente **letiva**.')
+                    ->body('Sem horas disponíveis na componente LETIVA.')
                     ->warning()
                     ->persistent()
                     ->send();

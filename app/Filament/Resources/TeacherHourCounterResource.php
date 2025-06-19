@@ -35,18 +35,29 @@ class TeacherHourCounterResource extends Resource
                     ->required()
                     ->reactive()
                     ->placeholder('Selecione um professor'),
+
                 Forms\Components\TextInput::make('carga_horaria')
                     ->label('Carga Horária Total')
                     ->numeric()
-                    ->disabled() // para que o usuário não edite diretamente
+                    //  ->disabled() // para que o usuário não edite diretamente
                     ->reactive()
-                    ->dehydrated(true) // para salvar no banco de dados
-                    ->afterStateHydrated(function (\Filament\Forms\Components\TextInput $component, $state, $record) {
-                        // opcional: garantir que seja calculado ao editar
-                        $component->state(
-                            ($record->carga_componente_letiva ?? 0) + ($record->carga_componente_naoletiva ?? 0)
-                        );
+                    ->minValue(0)
+                    ->maxValue(27) // máximo de horas que um professor pode ter
+                    ->default(22) // valor padrão, pode ser alterado conforme a lógica do sistema
+                    ->helperText('A carga horária total é a soma da carga horária letiva e não letiva')
+                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                        // Atualiza a carga horária total com base nas cargas letiva e não letiva
+                        $set('carga_horaria', ($get('carga_componente_letiva') ?? 0) + ($get('carga_componente_naoletiva') ?? 0));
                     }),
+                // ->dehydrated(false) // para não salvar no banco de dados, se necessário
+
+                // ->dehydrated(true) // para salvar no banco de dados
+                // ->afterStateHydrated(function (\Filament\Forms\Components\TextInput $component, $state, $record) {
+                //     // opcional: garantir que seja calculado ao editar
+                //     $component->state(
+                //         ($record->carga_componente_letiva ?? 0) + ($record->carga_componente_naoletiva ?? 0)
+                //     );
+                // }),
 
                 Forms\Components\TextInput::make('carga_componente_letiva')
                     ->label('Carga Horária Letiva')
@@ -54,7 +65,6 @@ class TeacherHourCounterResource extends Resource
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(function (callable $get) {
-                        Log::info('Valor de autorizado_horas_extra', ['valor' => $get('autorizado_horas_extra')]);
 
                         return $get('autorizado_horas_extra') === 'Autorizado' ? 27 : 22;
                     })
@@ -73,12 +83,14 @@ class TeacherHourCounterResource extends Resource
                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                         $set('carga_horaria', ($get('carga_componente_letiva') ?? 0) + ($state ?? 0));
                     }),
+
                 Forms\Components\Select::make('autorizado_horas_extra')
                     ->label('Horas Extras Autorizadas')
                     ->options([
                         'Autorizado' => 'Autorizado',
                         'Nao_autorizado' => 'Não autorizado',
                     ])
+
                     ->default('nao_autorizado') // <- valor compatível com a coluna enum
                     ->helperText('Selecione se o professor está autorizado a realizar horas extras')
                     ->required()

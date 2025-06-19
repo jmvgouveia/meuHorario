@@ -11,7 +11,7 @@ use Filament\Notifications\Notification;
 
 trait HandlesScheduleSwap
 {
-    public function submitJustification(array $data): void
+    public function submitJustification(array $data)
     {
         $formState = $this->form->getState();
 
@@ -32,7 +32,7 @@ trait HandlesScheduleSwap
         $schedule->classes()->sync($formState['id_classes'] ?? []);
         $schedule->students()->sync($formState['students'] ?? []);
 
-        ScheduleRequest::create([
+        $scheduleRequest = ScheduleRequest::create([
             'id_schedule_conflict' => $this->conflictingSchedule->id,
             'id_teacher_requester' => $teacher?->id,
             'id_schedule_novo' => $schedule->id,
@@ -40,10 +40,34 @@ trait HandlesScheduleSwap
             'status' => 'Pendente',
         ]);
 
+        $scheduleRequest->loadMissing('requester.user', 'scheduleConflict.teacher.user');
+        $schedule->loadMissing('weekday', 'timeperiod', 'room');
+
+        dd($schedule->toArray());
+
+        //$scheduleRequest->loadMissing('requester.user', 'scheduleConflict.teacher.user');
+
+        $requester = $scheduleRequest->requester?->user;
+        $owner = $scheduleRequest->scheduleConflict?->teacher?->user;
+
+        $currentRoom = $schedule?->room?->name ?? 'desconhecida';
+
+        $dayName = $schedule->weekday?->name ?? 'desconhecido';
+        $timePeriod = $schedule->timeperiod?->name ?? 'desconhecido';
+
         Notification::make()
-            ->title('Pedido de troca criado')
-            ->body("O seu pedido de troca foi criado com sucesso para o conflito.")
+            ->title("Pedido de Troca criado com sucesso!")
+            ->body("O seu pedido de troca da sala: {$currentRoom} na {$dayName} as {$timePeriod} foi enviado com sucesso para {$owner?->name}.") //// ---
+            ->persistent()
+            ->success();
+
+        Notification::make()
+            ->title("{$requester?->name}")
+            ->body("está a pedir para trocar a sala: {$currentRoom} na {$dayName} as {$timePeriod}.")
             ->success()
-            ->send();
+            ->sendToDatabase($owner);
+
+        // 👇 Emite o evento Livewire para o browser redirecionar
+        return redirect($this->getResource()::getUrl('index'));
     }
 }

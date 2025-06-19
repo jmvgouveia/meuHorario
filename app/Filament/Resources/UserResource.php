@@ -44,7 +44,7 @@ class UserResource extends Resource
                     ->placeholder('Preencha com o endereco de email'),
                 TextInput::make('password')
                     ->label('Senha')
-                    ->required()
+                    //->required()
                     ->minLength(5)
                     ->placeholder('Introduza a senha')
                     ->password()

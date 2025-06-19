@@ -43,6 +43,8 @@ class WeeklyScheduleWidget extends Widget
         $schedules = Schedules::with(['room', 'weekday', 'timePeriod', 'subject', 'classes'])
             //->where('status', 'Aprovado')
             ->where('id_teacher', $teacher->id)
+            ->whereNotIn('status', ['Recusado DP', 'Eliminado'])
+            ->orderByRaw("FIELD(status, 'Aprovado', 'Pendente')") // Ordena Aprovado primeiro, depois Pendente
             ->get();
 
         // Pegamos os dias da semana da tabela Weekday (ajusta se for outro nome)
@@ -56,14 +58,14 @@ class WeeklyScheduleWidget extends Widget
 
         foreach ($timePeriods as $tp) {
             foreach (array_keys($weekdays) as $dayId) {
-                $calendar[$tp->id][$dayId] = null;
+                $calendar[$tp->id][$dayId] = [];
             }
         }
         // Preenche o calendário com as marcações do professor
         foreach ($schedules as $schedule) {
             $dayId = $schedule->id_weekday;
             $timeId = $schedule->id_timeperiod;
-            $calendar[$timeId][$dayId] = $schedule;
+            $calendar[$timeId][$dayId][] = $schedule;
         }
 
         $recusados = \App\Models\ScheduleRequest::where('status', 'Recusado')

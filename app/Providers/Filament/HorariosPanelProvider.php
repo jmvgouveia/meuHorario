@@ -20,8 +20,10 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use App\Filament\Widgets\WeeklyScheduleWidget;
 use App\Filament\Widgets\ResumoWidget;
 use App\Filament\Widgets\StatsOverview;
-use Filament\Navigation\UserMenuItem;
+use Filament\Navigation\MenuItem;
 use App\Filament\Resources\UserResource;
+use Filament\Facades\Filament;
+
 
 class HorariosPanelProvider extends PanelProvider
 {
@@ -34,6 +36,13 @@ class HorariosPanelProvider extends PanelProvider
             ->path('horarios')
             //   ->viteTheme('resources/css/filament/horarios/theme.css')
             ->login()
+            ->databaseNotifications()
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Minha Conta')
+                    ->url(fn() => \App\Filament\Resources\UserResource::getUrl('edit', ['record' => Filament::auth()->id()]))
+                    ->icon('heroicon-o-user'),
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])

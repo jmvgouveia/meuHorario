@@ -118,7 +118,7 @@ class CreateSchedules extends CreateRecord
         $subject = $schedule->subject; // via relacionamento 'subject'
 
         if (!$teacherId || !$subject) {
-            Log::warning('Teacher ou Subject não encontrados ao criar aula.');
+            // Log::warning('Teacher ou Subject não encontrados ao criar aula.');
             return;
         }
 
@@ -128,7 +128,7 @@ class CreateSchedules extends CreateRecord
         $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacherId)->first();
 
         if (!$counter) {
-            Log::warning('TeacherHourCounter não encontrado.', ['id_teacher' => $teacherId]);
+            // Log::warning('TeacherHourCounter não encontrado.', ['id_teacher' => $teacherId]);
             return;
         }
 
@@ -141,12 +141,12 @@ class CreateSchedules extends CreateRecord
         $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
         $counter->save();
 
-        Log::info('Carga horária atualizada após criação da aula.', [
-            'teacher_id' => $teacherId,
-            'tipo' => $tipo,
-            'novo_total_letiva' => $counter->carga_componente_letiva,
-            'novo_total_naoletiva' => $counter->carga_componente_naoletiva,
-        ]);
+        // Log::info('Carga horária atualizada após criação da aula.', [
+        //     'teacher_id' => $teacherId,
+        //     'tipo' => $tipo,
+        //     'novo_total_letiva' => $counter->carga_componente_letiva,
+        //     'novo_total_naoletiva' => $counter->carga_componente_naoletiva,
+        // ]);
     }
 
     protected function getRedirectUrl(): string

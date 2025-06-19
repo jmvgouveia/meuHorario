@@ -33,7 +33,7 @@ class ResumoWidget extends Widget
 
         // Marcações aprovadas
         $schedules = Schedules::with('subject')
-            ->where('status', 'Aprovado')
+            ->whereIn('status', ['Aprovado', 'Aprovado DP'])
             ->where('id_teacher', $teacher->id)
             ->get();
 
