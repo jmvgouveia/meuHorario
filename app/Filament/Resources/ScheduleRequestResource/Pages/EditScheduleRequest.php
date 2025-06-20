@@ -35,12 +35,15 @@ class EditScheduleRequest extends EditRecord
         $isRequestOwner = $teacherId === $requesterId;
         $isReceiver = $teacherId === $conflictOwnerId;
 
+        $isGestor = in_array(Filament::auth()->id(), [1]); // podes trocar por ->hasRole('admin')
+
+
         $status = $this->record->status;
 
         $actions = [];
 
         // ✅ Quem pode aprovar ou recusar (dono do horário original)
-        if ($isReceiver) {
+        if ($isReceiver || $isGestor) {
 
             if ($status !== 'Recusado') {
                 $actions[] = Action::make('accept')
@@ -152,7 +155,7 @@ class EditScheduleRequest extends EditRecord
         }
 
         // ✅ Quem fez o pedido pode responder (se ainda não foi aprovado ou recusado)
-        if ($isRequestOwner && $status === 'Recusado') {
+        if (($isRequestOwner || $isGestor)  && $status === 'Recusado') {
             $actions[] = Action::make('escalar')
                 ->label('Escalar Situação')
                 ->color('warning')
@@ -206,7 +209,7 @@ class EditScheduleRequest extends EditRecord
         }
 
         // ✅ Quem fez o pedido pode cancelar (se ainda estiver pendente)
-        if ($isRequestOwner && $status === 'Pendente') {
+        if (($isRequestOwner || $isGestor)&& $status === 'Pendente') {
             $actions[] = Action::make('cancelRequest')
                 ->label('Cancelar Pedido')
                 ->color('danger')
@@ -221,11 +224,15 @@ class EditScheduleRequest extends EditRecord
                     $requestername = $this->record->requester?->name ?? 'desconhecido';
                     $owner = $this->record->scheduleConflict?->teacher?->user;
                     $ownername = $owner?->name ?? 'desconhecido';
+                    $dayName = $this->record->scheduleConflict?->weekday?->weekday ?? 'desconhecido';
+                    $timePeriod = $this->record->scheduleConflict?->timeperiod?->description ?? 'desconhecido';
+                    $currentRoom = $this->record->scheduleConflict?->room?->name ?? 'desconhecida';
+
 
                     Notification::make()
-                        ->title('Pedido Cancelado')
+                        ->title("Pedido de troca cancelado")
+                        ->body("Cancelou o pedido de troca com o professor {$ownername}, referente à aula na sala {$currentRoom} ({$dayName}, {$timePeriod}).")
                         ->success()
-                        ->body('O seu pedido de troca foi cancelado com sucesso.')
                         ->send();
 
                     Notification::make()
@@ -237,7 +244,8 @@ class EditScheduleRequest extends EditRecord
                     Notification::make()
                         ->title('Pedido Cancelado')
                         ->success()
-                        ->body("O seu pedido de troca com professor {$ownername} foi cancelado.")
+                        ->body("Cancelou o seu pedido de troca com o professor {$ownername}.")
+
                         ->sendToDatabase($requester); // Envia e armazena no banco de dados
 
 

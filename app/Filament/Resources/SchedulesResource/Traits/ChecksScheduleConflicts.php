@@ -132,8 +132,8 @@ trait ChecksScheduleConflicts
             $prof = $this->conflictingSchedule->teacher->name ?? 'outro professor';
 
             Notification::make()
-                ->title("Conflito com: $prof")
-                ->body("Já existe um agendamento nesta sala e horário. Altere o horário, a sala ou solicite troca.")
+                ->title("Conflito de horário detetado")
+                ->body("Já existe um agendamento com o(a) professor(a) {$prof} nesta sala e horário. Altere o horário, a sala, ou solicite uma troca.")
                 ->warning()
                 ->persistent()
                 ->send();

@@ -30,6 +30,11 @@ use Filament\Tables\Columns;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\View;
 use Closure;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\MultiSelectFilter;
+
+use Filament\Tables\Columns\TextColumn;
+
 
 
 
@@ -45,6 +50,13 @@ class ScheduleRequestResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $userId = Filament::auth()->id();
+    $user = Filament::auth()->user();
+
+
+          // ✅ Se for um gestor (por ID ou por papel), vê tudo
+    if (in_array($user?->id, [1]) || $user?->hasRole('admin')) {
+        return parent::getEloquentQuery();
+    }
 
         $teacher = \App\Models\Teacher::where('id_user', $userId)->first();
 
@@ -132,75 +144,233 @@ class ScheduleRequestResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                // Tables\Columns\TextColumn::make('id_schedule_conflict')
-                //     ->label('Conflito')
-                //     ->wrap()
-                //     ->toggleable()
-                //     ->limit(50),
-                // Tables\Columns\TextColumn::make('id_schedule_novo')
-                //     ->label('P.Troca')
-                //     ->toggleable()
-                //     ->limit(50),
-                Tables\Columns\TextColumn::make('requester.name')
+    {   
+            $userId = Filament::auth()->id();
+           $isGestor = in_array($userId, [1]); // ou usa uma função global/policy
+
+        $columns = [
+           TextColumn::make('requester.name')
                     ->label('Requerente')
                     ->wrap()
                     ->toggleable()
                     ->limit(25),
-                Tables\Columns\TextColumn::make('scheduleConflict.room.name')
-                    ->label('Sala')
-                    ->toggleable()
-                    ->limit(50),
-                Tables\Columns\TextColumn::make('scheduleConflict.weekday.weekday')
+           
+           TextColumn::make('scheduleConflict.weekday.weekday')
                     ->label('Dia da Semana')
                     ->wrap()
                     ->toggleable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('scheduleConflict.timePeriod.description')
+           TextColumn::make('scheduleConflict.timePeriod.description')
                     ->label('Hora da Aula')
                     ->wrap()
                     ->toggleable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('justification')
+            TextColumn::make('scheduleConflict.room.name')
+                    ->label('Sala')
+                    ->toggleable()
+                    ->limit(50),
+           TextColumn::make('justification')
                     ->label('Justificação do Pedido')
                     ->wrap()
                     ->toggleable()
                     ->limit(50),
-                // Tables\Columns\TextColumn::make('response')
-                //     ->label('Resposta do Professor')
-                //     ->wrap()
-                //     ->toggleable()
-                //     ->limit(50),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Estado do Pedido')
-                    ->toggleable()
-                    ->badge()
-                    ->color(fn(string $state): string => match ($state) {
-                        'Pendente' => 'warning',
-                        'Aprovado' => 'success',
-                        'Recusado' => 'danger',
-                        'Escalado' => 'info',
-                        'Aprovado DP' => 'success',
-                        'Recusado DP' => 'danger',
-                        default => 'gray',
-                    })
-                    ->sortable(),
-                //
-            ])
-            ->filters([
+                TextColumn::make('status')
+                ->label('Estado do Pedido')
+                ->toggleable()
+                ->badge()
+                ->color(fn(string $state): string => match ($state) {
+                    'Pendente' => 'warning',
+                    'Aprovado' => 'success',
+                    'Recusado' => 'danger',
+                    'Escalado' => 'info',
+                    'Aprovado DP' => 'success',
+                    'Recusado DP' => 'danger',
+                    default => 'gray',
+                })
+                ->sortable()
+                
 
-                //
-            ])
-            ->actions([
-                // Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
+        ];
+
+        if ($isGestor) {
+            $columns = array_merge($columns, [
+            TextColumn::make('scheduleConflict.teacher.name')
+            ->label('Professor Original')
+            ->wrap()
+            ->toggleable()
+            ->limit(50),
+            TextColumn::make('response')
+                ->label('Resposta do Professor')
+                ->wrap()
+                ->toggleable()
+                ->limit(50),
+            TextColumn::make('created_at')
+                ->label('Data de Criação')
+                ->dateTime()
+                ->toggleable()
+                ->sortable(),
+            TextColumn::make('updated_at')
+                ->label('Data de Atualização')
+                ->dateTime()
+                ->toggleable()
+                ->sortable(),
+            TextColumn::make('id')
+                ->label('ID do Pedido')
+                ->toggleable()
+                ->sortable(),    
+                       
+            ]);
+   
+        }
+
+return $table
+        ->columns($columns)
+        ->filters([
+            MultiSelectFilter::make('status')
+                ->options([
+                     'Pendente' => 'Pendente',
+                    'Aprovado' => 'Aprovado',
+                    'Recusado' => 'Recusado',
+                    'Escalado' => 'Escalado',
+                    'Aprovado DP' => 'Aprovado DP',
+                    'Recusado DP' => 'Recusado DP',
+                ])
+                ->label('Estado'),
+
+            ...( $isGestor ? [
+                MultiSelectFilter::make('id_teacher_requester')
+                    ->relationship('requester', 'name')
+                    ->label('Requerente'),
+                
+                // SelectFilter::make('id_schedule_conflict')
+                //     ->relationship('scheduleConflict.teacher.user', 'name')
+                //     ->label('Alvo do Pedido'),
+            ] : []),
+        ])
+       ->actions([
+               //  Tables\Actions\ViewAction::make(),
+               //  Tables\Actions\EditAction::make(),
+        ])
+        ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+                ])
+            ],
+    );
+
+
+
+
+
+
+
+
+
+
+
+
+        // return $table
+        //     ->columns([
+        //         // Tables\Columns\TextColumn::make('id_schedule_conflict')
+        //         //     ->label('Conflito')
+        //         //     ->wrap()
+        //         //     ->toggleable()
+        //         //     ->limit(50),
+        //         // Tables\Columns\TextColumn::make('id_schedule_novo')
+        //         //     ->label('P.Troca')
+        //         //     ->toggleable()
+        //         //     ->limit(50),
+        //         Tables\Columns\TextColumn::make('requester.name')
+        //             ->label('Requerente')
+        //             ->wrap()
+        //             ->toggleable()
+        //             ->limit(25),
+        //         Tables\Columns\TextColumn::make('scheduleConflict.room.name')
+        //             ->label('Sala')
+        //             ->toggleable()
+        //             ->limit(50),
+        //         Tables\Columns\TextColumn::make('scheduleConflict.weekday.weekday')
+        //             ->label('Dia da Semana')
+        //             ->wrap()
+        //             ->toggleable()
+        //             ->limit(50),
+        //         Tables\Columns\TextColumn::make('scheduleConflict.timePeriod.description')
+        //             ->label('Hora da Aula')
+        //             ->wrap()
+        //             ->toggleable()
+        //             ->limit(50),
+        //         Tables\Columns\TextColumn::make('justification')
+        //             ->label('Justificação do Pedido')
+        //             ->wrap()
+        //             ->toggleable()
+        //             ->limit(50),
+        //             ($isGestor ? [
+                 
+        //             Tables\Columns\TextColumn::make('response_coord')
+        //                 ->label('Resposta do Coordenador')
+        //                 ->wrap()
+        //                 ->toggleable()
+        //                 ->limit(50),
+        //             Tables\Columns\TextColumn::make('justification_escalation')
+        //                 ->label('Justificação de Escalação')
+        //                 ->wrap()
+        //                 ->toggleable()
+        //                 ->limit(50),        
+        //             Tables\Columns\TextColumn::make('created_at')
+        //                 ->label('Data de Criação')
+        //                 ->dateTime()
+        //                 ->toggleable()
+        //                 ->sortable(),
+        //             Tables\Columns\TextColumn::make('updated_at')
+        //                 ->label('Data de Atualização')
+        //                 ->dateTime()
+        //                 ->toggleable()
+        //                 ->sortable(),
+
+
+
+
+
+
+
+
+
+
+
+        //             ] : []),
+        //         // Tables\Columns\TextColumn::make('response')
+        //         //     ->label('Resposta do Professor')
+        //         //     ->wrap()
+        //         //     ->toggleable()
+        //         //     ->limit(50),
+        //         Tables\Columns\TextColumn::make('status')
+        //             ->label('Estado do Pedido')
+        //             ->toggleable()
+        //             ->badge()
+        //             ->color(fn(string $state): string => match ($state) {
+        //                 'Pendente' => 'warning',
+        //                 'Aprovado' => 'success',
+        //                 'Recusado' => 'danger',
+        //                 'Escalado' => 'info',
+        //                 'Aprovado DP' => 'success',
+        //                 'Recusado DP' => 'danger',
+        //                 default => 'gray',
+        //             })
+        //             ->sortable(),
+        //         //
+        //     ])
+            // ->filters([
+
+            //     //
+            // ])
+            // ->actions([
+            //     // Tables\Actions\EditAction::make(),
+            // ])
+            // ->bulkActions([
+            //     Tables\Actions\BulkActionGroup::make([
+            //         Tables\Actions\DeleteBulkAction::make(),
+            //     ]),
+            // ]);
     }
 
     public static function getRelations(): array

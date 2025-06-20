@@ -97,13 +97,14 @@ class EditSchedules extends EditRecord
                     $this->record->delete();
 
                     Notification::make()
-                        ->title("Eliminou o Horário com ID: {$this->record->id} com sucesso.")
+                        ->title("Horário Eliminado")
+                        ->body("O horário com ID: {$this->record->id} foi eliminado com sucesso.")
                         ->success()
                         ->sendToDatabase(Filament::auth()->user());
 
                     Notification::make()
                         ->title('Horário Eliminado')
-                        ->body('O horário foi eliminado com sucesso.')
+                        ->body("O horário com ID: {$this->record->id} foi eliminado com sucesso.")
                         ->success()
                         ->send();
                     $this->redirect(filament()->getUrl()); // 👈 redireciona para o "main"
@@ -130,6 +131,7 @@ class EditSchedules extends EditRecord
                     ->form([
                         Textarea::make('justification')
                             ->label('Escreva a justificação')
+                            ->helperText('Escreva uma justificação para o conflito de horário. Esta justificação será enviada ao professor responsável pelo horário em conflito.')
                             ->required()
                             ->minLength(10),
                     ])

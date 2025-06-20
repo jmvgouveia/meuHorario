@@ -69,7 +69,7 @@ class EditScheduleRequestResolveConflict extends EditRecord
                     ]);
 
                     $this->record->scheduleNovo?->update([
-                        'status' => 'Aprovado',
+                        'status' => 'Aprovado DP',
                     ]);
 
 

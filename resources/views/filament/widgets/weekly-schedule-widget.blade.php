@@ -1,72 +1,86 @@
 <!-- weekly-schedule-widget.blade.php -->
 
 <style>
-    .notificacao {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        height: 16px;
-        width: 16px;
-        background-color: #dc2626;
-        border-radius: 9999px;
-        z-index: 10;
-        color: white;
-        font-size: 10px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
 
-    .notificacao.dp {
-        background-color: #065f46;
-        color: white;
-        font-size: 9px;
-        font-weight: bold;
-        height: 18px;
-        width: 18px;
-        border-radius: 9999px;
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        z-index: 10;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+.notificacao {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    height: 16px;
+    width: 16px;
+    background-color: #dc2626; /* padrão: vermelho */
+    border-radius: 9999px;
+    z-index: 10;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    .notificacao.pulsar::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: 9999px;
-        background-color: #dc2626;
-        opacity: 0.6;
-        animation: pulse 1.2s infinite ease-in-out;
-        z-index: -1;
-    }
+      background: radial-gradient(circle at 30% 30%, #ffffff44, transparent 70%),
+                var(--notif-color, #dc2626);
+    box-shadow:
+        inset -1px -1px 2px rgba(0, 0, 0, 0.2),
+        1px 1px 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
 
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            opacity: 0.6;
-        }
+.notificacao.dp {
+    background-color: #065f46;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    height: 18px;
+    width: 18px;
+    top: -6px;
+    right: -6px;
 
-        70% {
-            transform: scale(2.5);
-            opacity: 0;
-        }
+      /* background: radial-gradient(circle at 30% 30%, #ffffff33, transparent 70%),
+                var(--notif-color);
+    box-shadow:
+        inset -1px -1px 2px rgba(0, 0, 0, 0.2),
+        1px 1px 2px rgba(0, 0, 0, 0.3); */
+}
 
-        100% {
-            transform: scale(1);
-            opacity: 0;
-        }
-    }
+.notificacao.pulsar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 9999px;
+    opacity: 0.6;
+    animation: pulse 1.2s infinite ease-in-out;
+    z-index: -1;
+}
 
-    .status-badge {
+.notificacao.T {
+    background-color: #2563eb; /* azul */
+}
+
+.notificacao.R {
+    background-color: #dc2626; /* vermelho */
+}
+
+.notificacao.E {
+    background-color: #7c3aed; /* laranja */
+}
+
+.notificacao.pulsar.T::after {
+    background-color: #2563eb;
+}
+
+.notificacao.pulsar.R::after {
+    background-color: #dc2626;
+}
+
+.notificacao.pulsar.E::after {
+    background-color:#7c3aed;
+}
+
+ .status-badge {
         display: block;
         padding: 0.5rem 0.75rem;
         border-radius: 0.5rem;
@@ -77,6 +91,10 @@
         overflow: hidden;
         font-weight: 500;
         font-size: 0.75rem;
+            /* 💡 Sombra suave */
+    /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.0 */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 1px rgba(0, 0, 0, 0.06);
+
     }
 
     .status-title {
@@ -87,9 +105,9 @@
     .status-info {
         font-size: 9px;
     }
-
-    .badge-aprovado {
-        background-color: #059669;
+ .badge-aprovado {
+    background-color: #059669;
+      
     }
 
     .badge-pendente {
@@ -98,12 +116,32 @@
 
     .badge-reuniao-tee {
         background-color: #1e40af;
+        /* Azul */
         color: white;
+        /* Para garantir boa legibilidade */
     }
 
     .badge-rejeitado {
         background-color: #dc2626;
     }
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    70% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
 </style>
 
 <div class="w-full overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
@@ -165,16 +203,14 @@
                     }
 
                     // Aprovado pelo DP
-                    if ($PedidosAprovadosDP->has($schedule->id)) {
-                    $req = $PedidosAprovadosDP[$schedule->id];
-                    if ($authId === $req->id_teacher_requester || $authId === $req->scheduleConflict?->teacher_id) {
-                    $hasNotification = true;
-                    $notifLetter = 'DP';
-                    $notifClass = 'dp';
-                    $tooltip = 'Troca aprovada';
-                    $link = route('filament.admin.resources.schedule-requests.edit', $req->id);
-                    }
-                    }
+                  if ($schedule->status === 'Aprovado DP' && $PedidosAprovadosDP->has($schedule->id)) {
+    $req = $PedidosAprovadosDP[$schedule->id];
+    $hasNotification = true;
+    $notifLetter = 'DP';
+    $notifClass = 'dp';
+    $tooltip = 'Troca aprovada';
+    $link = route('filament.admin.resources.schedule-requests.edit', $req->id);
+}
 
                     // Escalado
                     if ($escalados->has($schedule->id)) {
@@ -211,7 +247,8 @@
                                 @endforeach
                             </div>
                             @if ($hasNotification)
-                            <span class="notificacao {{ $notifClass ?: 'pulsar' }}" title="{{ $tooltip }}">{{ $notifLetter }}</span>
+                           <span class="notificacao {{ $notifLetter }} {{ $notifClass ?: 'pulsar' }}" title="{{ $tooltip }}">{{ $notifLetter }}</span>
+
                             @endif
                         </div>
                     </a>
@@ -227,24 +264,25 @@
             @endforeach
         </tbody>
     </table>
-
+<br>
     <div class="flex flex-wrap justify-center gap-2 mb-4 px-4 text-xs font-medium max-w-4xl mx-auto">
         <div class="status-badge badge-reuniao-tee w-28 text-center truncate">Não Letiva</div>
         <div class="status-badge badge-aprovado w-28 text-center truncate">Aprovado</div>
         <div class="status-badge badge-pendente w-28 text-center truncate">Pendente</div>
 
         <div class="flex items-center gap-1 w-36 truncate">
-            <span class="notificacao pulsar" style="position: static; transform: scale(0.75);">T</span>
+           <span class="notificacao T pulsar" style="position: static; transform: scale(0.75);">T</span>
+
             <span>Pedido de Troca</span>
         </div>
 
         <div class="flex items-center gap-1 w-36 truncate">
-            <span class="notificacao pulsar" style="position: static; transform: scale(0.75);">R</span>
+           <span class="notificacao R pulsar" style="position: static; transform: scale(0.75);">R</span>
             <span>Pedido Recusado</span>
         </div>
 
         <div class="flex items-center gap-1 w-36 truncate">
-            <span class="notificacao pulsar" style="position: static; transform: scale(0.75);">E</span>
+<span class="notificacao E pulsar" style="position: static; transform: scale(0.75);">E</span>
             <span>Pedido Escalado</span>
         </div>
 

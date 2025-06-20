@@ -1,0 +1,62 @@
+✅ 1. Envio do Pedido de Troca
+🟢 Para o professor alvo:
+
+
+->title("Novo pedido de troca recebido")
+->body("O professor {$requestername} solicitou trocar a aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")
+
+
+🟢 Para o requerente:
+
+->title("Pedido de troca submetido")
+->body("O seu pedido para trocar a aula na sala {$currentRoom}, agendada para {$dayName} às {$timePeriod}, foi enviado ao professor {$ownername}.")
+
+
+
+✅ 2. Aprovação do Pedido
+✅ Para o requerente:
+
+->title("Pedido de troca aprovado")
+->body("O professor {$ownername} aprovou a troca da aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}. A nova sala será {$salaNova}.")
+
+✅ Para o aprovador:
+
+->title("Pedido de troca aprovado com sucesso")
+->body("Aprovou o pedido de {$requestername} para trocar a aula da sala {$currentRoom} para a sala {$salaNova}, no {$dayName} às {$timePeriod}.")
+
+
+
+❌ 3. Recusa do Pedido
+🔴 Para o requerente:
+
+->title("Pedido de troca recusado")
+->body("O professor {$ownername} recusou a troca da aula na sala {$currentRoom}, prevista para {$dayName} às {$timePeriod}.")
+
+🔴 Para o recusador:
+
+->title("Pedido de troca recusado com sucesso")
+->body("Recusou o pedido de {$requestername} para a troca da aula na sala {$currentRoom}, agendada para {$dayName} às {$timePeriod}.")
+
+
+⚠️ 4. Escalação do Pedido
+🟠 Para o professor alvo:
+
+->title("Pedido de troca escalado")
+->body("O professor {$requestername} escalou o pedido de troca da aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")
+
+🟠 Para o requerente:
+
+->title("Pedido de troca escalado")
+->body("O pedido de troca com o professor {$ownername}, referente à aula na sala {$currentRoom}, no {$dayName} às {$timePeriod}, foi escalado para análise superior.")
+
+
+🔄 5. Cancelamento do Pedido
+⚫ Para o professor alvo:
+
+->title("Pedido de troca cancelado")
+->body("O professor {$requestername} cancelou o pedido referente à aula na sala {$currentRoom}, agendada para {$dayName} às {$timePeriod}.")
+
+⚫ Para o requerente:
+
+->title("Pedido de troca cancelado com sucesso")
+->body("Cancelou o pedido de troca com o professor {$ownername}, relativo à aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")

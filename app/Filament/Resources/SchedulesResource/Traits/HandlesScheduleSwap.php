@@ -43,27 +43,27 @@ trait HandlesScheduleSwap
         $scheduleRequest->loadMissing('requester.user', 'scheduleConflict.teacher.user');
         $schedule->loadMissing('weekday', 'timeperiod', 'room');
 
-        dd($schedule->toArray());
+       // dd($schedule->toArray());
 
         //$scheduleRequest->loadMissing('requester.user', 'scheduleConflict.teacher.user');
 
         $requester = $scheduleRequest->requester?->user;
         $owner = $scheduleRequest->scheduleConflict?->teacher?->user;
-
         $currentRoom = $schedule?->room?->name ?? 'desconhecida';
+        $dayName = $schedule?->weekday?->weekday ?? 'desconhecido';
+        $timePeriod = $schedule->timeperiod?->description ?? 'desconhecido';
 
-        $dayName = $schedule->weekday?->name ?? 'desconhecido';
-        $timePeriod = $schedule->timeperiod?->name ?? 'desconhecido';
 
         Notification::make()
             ->title("Pedido de Troca criado com sucesso!")
-            ->body("O seu pedido de troca da sala: {$currentRoom} na {$dayName} as {$timePeriod} foi enviado com sucesso para {$owner?->name}.") //// ---
+            ->body("O seu pedido de troca da sala {$currentRoom}, na {$dayName}, entre {$timePeriod}, foi enviado com sucesso para {$owner?->name}.")
             ->persistent()
-            ->success();
+            ->success()
+            ->send();
 
         Notification::make()
-            ->title("{$requester?->name}")
-            ->body("está a pedir para trocar a sala: {$currentRoom} na {$dayName} as {$timePeriod}.")
+            ->title("Pedido de Troca")
+            ->body("{$requester?->name} solicitou a troca da sala {$currentRoom}, na {$dayName}, entre {$timePeriod}.")
             ->success()
             ->sendToDatabase($owner);
 
