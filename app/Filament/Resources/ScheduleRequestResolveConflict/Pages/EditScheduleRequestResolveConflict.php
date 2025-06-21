@@ -104,7 +104,8 @@ class EditScheduleRequestResolveConflict extends EditRecord
                         ->sendToDatabase($owner); // Envia e armazena no banco de dados
 
                     // Atualiza numero de horas
-                    SchedulesResource::hoursCounterUpdate($this->record->scheduleNovo, true);
+                    // SchedulesResource::hoursCounterUpdate($this->record->scheduleNovo, true);
+                    SchedulesResource::hoursCounterUpdate($this->record->scheduleNovo, false);
                 }),
 
             Action::make('recusar')

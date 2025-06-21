@@ -310,6 +310,9 @@ class EditScheduleRequest extends EditRecord
                 }
                 $owner = $this->record->scheduleConflict?->teacher?->user;
                 $idMarcacao =  $this->record->scheduleNovo?->id  ?? 'N/A';
+
+                SchedulesResource::hoursCounterUpdate($schedule, true); // Atualiza o contador de horas
+
                 Notification::make()
                     ->title('Pedido cancelado com sucesso')
                     ->body("O pedido de troca foi removido e o horário pendente: {$idMarcacao} foi eliminado.")
@@ -323,6 +326,8 @@ class EditScheduleRequest extends EditRecord
             ->label('Cancelar')
             ->url($this->getResource()::getUrl('index'))
             ->color('gray');
+
+
 
         return $actions;
     }
