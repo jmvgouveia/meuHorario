@@ -58,6 +58,7 @@ class ScheduleJustificationModal extends Component
             'id_teacher_requester' => $teacher?->id,
             'id_schedule_novo' => $schedule->id,
             'justification' => $this->justification,
+            'created_at' => now(),
             'status' => 'Pendente',
         ]);
 

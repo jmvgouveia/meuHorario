@@ -15,16 +15,19 @@ use App\Models\Room;
 use App\Models\User;
 use Filament\Facades\Filament;  // <-- Importar aqui
 use App\Filament\Resources\SchedulesResource;
-
-
+use Filament\Actions\DeleteAction;
 
 class EditScheduleRequest extends EditRecord
 {
     protected static string $resource = ScheduleRequestResource::class;
+    use \App\Filament\Resources\SchedulesResource\Traits\CheckScheduleWindow;
 
 
     protected function getFormActions(): array
     {
+
+
+
         $this->record->loadMissing('scheduleConflict');
 
         $teacherId = Filament::auth()->user()?->teacher?->id;
@@ -52,16 +55,18 @@ class EditScheduleRequest extends EditRecord
                     ->form([
                         Select::make('id_room_novo')
                             ->label('Sala Nova')
+                            ->placeholder('Selecione uma sala disponível...')
                             ->required()
                             ->preload()
                             ->options(fn() => $this->getAvailableRooms()),
 
                         Textarea::make('response')
-                            ->label('Justificação para Aprovação')
+                            ->label($isGestor ? 'Justificação da Aprovação (Gestor)' : 'Justificação da Aceitação')
+                            ->placeholder('Descreva a razão da aprovação da troca...')
                             ->required()
                             ->rows(4),
                     ])
-                    ->action(function (array $data) {
+                    ->action(function (array $data) use ($isGestor) {
                         // dados para a notificação
 
                         $schedule = $this->record->scheduleConflict;
@@ -72,37 +77,50 @@ class EditScheduleRequest extends EditRecord
                         $requestername = $this->record->requester?->name ?? 'desconhecido';
                         $owner = $this->record->scheduleConflict?->teacher?->user;
                         $ownername = $owner?->name ?? 'desconhecido';
+                        $dayName = $this->record->scheduleConflict?->weekday?->weekday ?? 'desconhecido';
+                        $timePeriod = $this->record->scheduleConflict?->timeperiod?->description ?? 'desconhecido';
+                        $currentRoom = $this->record->scheduleConflict?->room?->name ?? 'desconhecida';
 
 
+                        if ($isGestor) {
+                            $this->record->update([
+                                'status' => 'Aprovado DP',
+                                'response' => $data['response'],
+                            ]);
 
-                        $this->record->update([
-                            'status' => 'Aprovado',
-                            'response' => $data['response'],
-                        ]);
+                            $this->record->scheduleConflict?->update([
+                                'status' => 'Aprovado DP',
+                                'id_room' => $data['id_room_novo'],
+                                'responded_at' => now(),
+                            ]);
+                        } else {
+                            $this->validateScheduleWindow();
+                            $this->record->update([
+                                'status' => 'Aprovado',
+                                'response' => $data['response'],
+                            ]);
 
-                        $this->record->scheduleConflict?->update([
-                            'status' => 'Aprovado',
-                            'id_room' => $data['id_room_novo'],
-                        ]);
+                            $this->record->scheduleConflict?->update([
+                                'status' => 'Aprovado',
+                                'id_room' => $data['id_room_novo'],
+                                'responded_at' => now(),
+                            ]);
+                        }
+
 
                         $this->record->scheduleNovo?->update(['status' => 'Aprovado']);
 
-                        Notification::make()
-                            ->title('Troca Aprovada')
-                            ->success()
-                            ->body("Aprovou o pedido de {$requestername} na troca da sala: {$salaAntiga} para a sala: {$salaNova}.")
-                            ->sendToDatabase($owner); // Envia e armazena no banco de dados
 
                         Notification::make()
-                            ->title('Troca Aprovada')
+                            ->title('Pedido de troca aprovado com sucesso')
+                            ->body("Aprovou o pedido de {$requestername} para trocar a sala {$currentRoom}, no {$dayName} às {$timePeriod}. A nova sala será {$salaNova}")
                             ->success()
-                            ->body("Aprovou o pedido de {$requestername} na troca da sala: {$salaAntiga} para a sala: {$salaNova}.")
                             ->send();
 
                         Notification::make()
-                            ->title('Troca Aprovada')
+                            ->title("Pedido de troca aprovado")
+                            ->body("O(a) professor(a) {$ownername} aprovou o seu pedido de trocar a sala {$currentRoom}, na {$dayName} às {$timePeriod}.")
                             ->success()
-                            ->body("O seu pedido de troca para a sala: {$salaAntiga} foi aceite por {$ownername}.")
                             ->sendToDatabase($requester); // Envia e armazena no banco de dados
 
                         SchedulesResource::hoursCounterUpdate($this->record->scheduleNovo, false);
@@ -122,12 +140,22 @@ class EditScheduleRequest extends EditRecord
                             ->required()
                             ->rows(4),
                     ])
-                    ->action(function (array $data) {
-                        $this->record->update([
-                            'status' => 'Recusado',
-                            'response' => $data['response'],
-                            'response_at' => now(),
-                        ]);
+                    ->action(function (array $data) use ($isGestor) {
+
+                        if ($isGestor) {
+                            $this->record->update([
+                                'status' => 'Recusado DP',
+                                'response' => $data['response'],
+                                'responded_at' => now(),
+                            ]);
+                        } else {
+                            $this->validateScheduleWindow();
+                            $this->record->update([
+                                'status' => 'Recusado',
+                                'response' => $data['response'],
+                                'responded_at' => now(),
+                            ]);
+                        };
 
 
                         $schedule = $this->record->scheduleConflict;
@@ -135,18 +163,22 @@ class EditScheduleRequest extends EditRecord
                         $salaAntiga = $schedule?->room?->name ?? 'desconhecida';
                         $requester = $this->record->requester?->user;
                         $ownername = $owner?->name ?? 'desconhecido';
+                        $owner = $this->record->scheduleConflict?->teacher?->user;
+                        $dayName = $this->record->scheduleConflict?->weekday?->weekday ?? 'desconhecido';
+                        $timePeriod = $this->record->scheduleConflict?->timeperiod?->description ?? 'desconhecido';
+                        $currentRoom = $this->record->scheduleConflict?->room?->name ?? 'desconhecida';
 
                         Notification::make()
-                            ->title('Troca Recusada')
+                            ->title("Pedido de troca recusado com sucesso")
+                            ->body("Recusou o pedido de {$requestername} para a troca da aula na sala {$currentRoom}, agendada para {$dayName} às {$timePeriod}.")
                             ->danger()
-                            ->body("Recusou a troca de sala com {$requestername} na sala: {$salaAntiga}.")
                             ->send();
 
                         Notification::make()
-                            ->title('Troca Recusada')
+                            ->title("Pedido de troca recusado")
+                            ->body("O professor {$ownername} recusou a troca da aula na sala {$currentRoom}, prevista para {$dayName} às {$timePeriod}.")
                             ->danger()
-                            ->body("O seu pedido de troca da sala {$salaAntiga} foi recusado por {$ownername}.")
-                            ->sendToDatabase($requester); // Envia e armaz
+                            ->sendToDatabase($requester);
 
 
                         return redirect($this->getResource()::getUrl('index'));
@@ -166,9 +198,11 @@ class EditScheduleRequest extends EditRecord
                         ->rows(4),
                 ])
                 ->action(function (array $data) {
+                    $this->validateScheduleWindow();
                     $this->record->update([
                         'status' => 'Escalado',
                         'justification_escalada' => $data['justification_escalada'],
+                        'justification_at' => now(),
                     ]);
                     Notification::make()
                         ->title('Situação Escalada')
@@ -182,24 +216,28 @@ class EditScheduleRequest extends EditRecord
                     $requestername = $this->record->requester?->name ?? 'desconhecido';
                     $owner = $this->record->scheduleConflict?->teacher?->user;
                     $ownername = $owner?->name ?? 'desconhecido';
+                    $dayName = $this->record->scheduleConflict?->weekday?->weekday ?? 'desconhecido';
+                    $timePeriod = $this->record->scheduleConflict?->timeperiod?->description ?? 'desconhecido';
+                    $currentRoom = $this->record->scheduleConflict?->room?->name ?? 'desconhecida';
 
 
                     Notification::make()
                         ->title('Pedido Escalado')
                         ->warning()
-                        ->body('O seu pedido de troca foi escalado para análise pela Direção Pedagógica.');
+                        ->body("O pedido de troca com o professor {$ownername}, referente à aula na sala {$currentRoom}, no {$dayName} às {$timePeriod}, foi escalado para análise superior.")
+                        ->send();
 
                     // Notifica o dono do horário original
                     Notification::make()
-                        ->title('Pedido Escalado')
+                        ->title("Pedido de troca escalado")
+                        ->body("O professor {$requestername} escalou o pedido de troca da aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")
                         ->warning()
-                        ->body("O pedido de troca do professor {$requestername} foi escalado para análise pela Direção Pedagógica.")
-                        ->sendToDatabase($owner); // Envia e armazena no banco de dados
+                        ->sendToDatabase($owner);
 
                     Notification::make()
-                        ->title('Pedido Escalado')
+                        ->title("Pedido de troca escalado")
+                        ->body("O pedido de troca com o professor {$ownername}, referente à aula na sala {$currentRoom}, no {$dayName} às {$timePeriod}, foi escalado para análise superior.")
                         ->warning()
-                        ->body("O seu pedido de troca ID:{$idMarcacao} com professor {$ownername} foi escalado para análise pela Direção Pedagógica.")
                         ->sendToDatabase($requester);
 
 
@@ -209,13 +247,14 @@ class EditScheduleRequest extends EditRecord
         }
 
         // ✅ Quem fez o pedido pode cancelar (se ainda estiver pendente)
-        if (($isRequestOwner || $isGestor)&& $status === 'Pendente') {
+        if (($isRequestOwner || $isGestor) && $status === 'Pendente') {
             $actions[] = Action::make('cancelRequest')
                 ->label('Cancelar Pedido')
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading('Cancelar este pedido de troca?')
                 ->action(function () {
+                    $this->validateScheduleWindow();
                     $this->record->update(['status' => 'Cancelado']);
                     $this->record->scheduleNovo?->update(['status' => 'Cancelado']);
 
@@ -236,16 +275,15 @@ class EditScheduleRequest extends EditRecord
                         ->send();
 
                     Notification::make()
-                        ->title('Pedido Cancelado')
+                        ->title("Pedido de troca cancelado")
+                        ->body("O professor {$requestername} cancelou o pedido referente à aula na sala {$currentRoom}, agendada para {$dayName} às {$timePeriod}.")
                         ->success()
-                        ->body("O pedido de troca do professor {$requestername} foi cancelado.")
                         ->sendToDatabase($owner); // Envia e armazena no banco de dados
 
                     Notification::make()
-                        ->title('Pedido Cancelado')
+                        ->title("Pedido de troca cancelado com sucesso")
+                        ->body("Cancelou o pedido de troca com o professor {$ownername}, relativo à aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")
                         ->success()
-                        ->body("Cancelou o seu pedido de troca com o professor {$ownername}.")
-
                         ->sendToDatabase($requester); // Envia e armazena no banco de dados
 
 
@@ -256,39 +294,35 @@ class EditScheduleRequest extends EditRecord
 
 
 
+        $actions[] = DeleteAction::make('cancelarPedido')
+            ->label('Eliminar Pedido')
+            ->color('danger')
+            ->visible(fn() => \Filament\Facades\Filament::auth()->user()?->teacher?->id === $this->record->id_teacher_requester)
 
+            ->requiresConfirmation()
+            ->modalHeading('Cancelar Pedido de Troca')
+            ->modalSubheading('Isto irá eliminar o pedido e o horário criado para a troca.')
+            ->after(function ($record) {
+                $schedule = $record->scheduleNovo;
 
+                if ($schedule) {
+                    $schedule->delete(); // Apenas elimina o horário
+                }
+                $owner = $this->record->scheduleConflict?->teacher?->user;
+                $idMarcacao =  $this->record->scheduleNovo?->id  ?? 'N/A';
+                Notification::make()
+                    ->title('Pedido cancelado com sucesso')
+                    ->body("O pedido de troca foi removido e o horário pendente: {$idMarcacao} foi eliminado.")
+                    ->success()
+                    ->sendToDatabase($owner);
+            })
+            ->successRedirectUrl($this->getResource()::getUrl('index'));
 
 
         $actions[] = Action::make('cancel')
             ->label('Cancelar')
             ->url($this->getResource()::getUrl('index'))
             ->color('gray');
-
-
-
-
-        // Botão sempre presente para voltar
-        // $actions[] = Action::make('marcarComoEliminado')
-        //     ->label('Marcar como Eliminado')
-        //     ->color('danger')
-        //     ->requiresConfirmation()
-        //     ->action(function () {
-        //         $this->record->update(['status' => 'Eliminado']);
-
-        //         // Elimina o pedido de troca
-        //         $this->record->scheduleNovo?->update(['status' => 'Eliminado']);
-
-        //         Notification::make()
-        //             ->title("Pedido de troca marcado como eliminado")
-        //             ->success()
-        //             ->body("O pedido de troca foi marcado como eliminado.")
-        //             ->sendToDatabase(Filament::auth()->user());
-
-        //         return redirect($this->getResource()::getUrl('index'));
-        //     });
-
-
 
         return $actions;
     }

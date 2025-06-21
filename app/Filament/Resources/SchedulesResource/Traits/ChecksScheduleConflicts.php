@@ -9,6 +9,8 @@ use App\Models\Schedules;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Support\Exceptions\Halt;
+use App\Models\Student;
+
 
 trait ChecksScheduleConflicts
 {
@@ -77,29 +79,48 @@ trait ChecksScheduleConflicts
             throw new Halt('Erro: O professor já tem uma atividade neste horário.');
         }
     }
-
-    private function checkStudentScheduleConflict(int $idStudent, int $weekday, int $timeperiod, ?int $ignoreId = null): void
+    //---
+    public function checkStudentScheduleConflict(string|int $studentNumber, int $weekday, int $timeperiod, ?int $ignoreId = null): void
     {
-        $query = Schedules::whereHas('students', function ($q) use ($idStudent) {
-            $q->where('id_student', $idStudent);
-        })
+        // 1. Obter ID do aluno a partir do número
+        $student = Student::where('id', $studentNumber)->first();
+
+        if (!$student) {
+            Notification::make()
+                ->title('Aluno não encontrado')
+                ->body("Não foi encontrado aluno com o número {$studentNumber}.")
+                ->danger()
+                ->send();
+
+            throw new Halt("Erro: O Aluno {$student->name} já tem uma atividade neste horário.");
+            // impede erro visual no Filament
+        }
+
+        // 2. Verificar se esse aluno tem marcação nesse dia/período
+        $conflict = Schedules::whereHas(
+            'students',
+            fn($q) =>
+            $q->where('id_student', $student->id)
+        )
             ->where('id_weekday', $weekday)
             ->where('id_timeperiod', $timeperiod)
             ->whereNotIn('status', ['Recusado DP', 'Eliminado'])
-            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId));
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->exists();
 
-        if ($query->exists()) {
+        // 3. Se existir conflito, notificar e parar
+        if ($conflict) {
             Notification::make()
                 ->title('Conflito de horário detetado')
-                ->body("O aluno já tem uma atividade marcada neste horário.")
+                ->body("O aluno {$student->name} já tem uma atividade neste horário.")
                 ->warning()
                 ->persistent()
                 ->send();
 
-            throw new Halt('Erro: O aluno já tem uma atividade neste horário.');
+            throw new Halt("Erro: O Aluno {$student->name} já tem uma atividade neste horário.");
         }
     }
-
+    //---
 
 
     private function checkRoomScheduleConflict(int $idRoom, int $weekday, int $timeperiod, ?int $ignoreId = null): void
@@ -110,21 +131,8 @@ trait ChecksScheduleConflicts
             ->where('id_weekday', $weekday)
             ->where('id_timeperiod', $timeperiod)
             ->whereNotIn('status', ['Recusado DP', 'Eliminado'])
-            // ->where('status', '!=', 'Recusado DP') // Exclude pending schedules
-            // ->where('status', '!=', 'Eliminado')
             ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId));
 
-
-
-
-
-        // $query = Schedules::where('id_room', $idRoom)
-        //     ->where('id_weekday', $weekday)
-        //     ->where('id_timeperiod', $timeperiod);
-
-        // if ($ignoreId) {
-        //     $query->where('id', '!=', $ignoreId);
-        // }
 
         $this->conflictingSchedule = $query->with('teacher')->first();
 

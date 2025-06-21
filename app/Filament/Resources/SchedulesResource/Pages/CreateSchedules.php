@@ -87,7 +87,8 @@ class CreateSchedules extends CreateRecord
     protected function afterCreate(): void
     {
         $this->afterSave();
-        $this->hoursCounterUpdate($this->record);
+        SchedulesResource::hoursCounterUpdate($this->record, false);
+        // $this->hoursCounterUpdate($this->record);
     }
 
 
@@ -109,45 +110,6 @@ class CreateSchedules extends CreateRecord
         $record->students()->sync($this->data['students'] ?? []);
     }
 
-
-
-
-    protected function hoursCounterUpdate(Schedules $schedule): void
-    {
-        $teacherId = $schedule->id_teacher;
-        $subject = $schedule->subject; // via relacionamento 'subject'
-
-        if (!$teacherId || !$subject) {
-            // Log::warning('Teacher ou Subject não encontrados ao criar aula.');
-            return;
-        }
-
-        // Exemplo: usar o campo "type" na tabela de disciplinas
-        $tipo = strtolower($subject->type ?? 'letiva'); // Assume "letiva" por padrão
-
-        $counter = \App\Models\TeacherHourCounter::where('id_teacher', $teacherId)->first();
-
-        if (!$counter) {
-            // Log::warning('TeacherHourCounter não encontrado.', ['id_teacher' => $teacherId]);
-            return;
-        }
-
-        if ($tipo === 'nao letiva') {
-            $counter->carga_componente_naoletiva = max(0, $counter->carga_componente_naoletiva - 1);
-        } else {
-            $counter->carga_componente_letiva = max(0, $counter->carga_componente_letiva - 1);
-        }
-
-        $counter->carga_horaria = $counter->carga_componente_letiva + $counter->carga_componente_naoletiva;
-        $counter->save();
-
-        // Log::info('Carga horária atualizada após criação da aula.', [
-        //     'teacher_id' => $teacherId,
-        //     'tipo' => $tipo,
-        //     'novo_total_letiva' => $counter->carga_componente_letiva,
-        //     'novo_total_naoletiva' => $counter->carga_componente_naoletiva,
-        // ]);
-    }
 
     protected function getRedirectUrl(): string
     {

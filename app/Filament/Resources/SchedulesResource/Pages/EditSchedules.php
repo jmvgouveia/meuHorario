@@ -33,6 +33,7 @@ class EditSchedules extends EditRecord
 
 
 
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Se quiseres mudar algo antes de salvar os campos do modelo, faz aqui.
@@ -65,19 +66,11 @@ class EditSchedules extends EditRecord
         $record->students()->sync($this->data['students'] ?? []);
     }
 
-
-    // public static function rollbackScheduleRequest(Schedules $schedule): void
-    // {
-    //     ScheduleRequest::where(function ($query) use ($schedule) {
-    //         $query->where('id_schedule_conflict', $schedule->id)
-    //             ->orWhere('id_schedule_novo', $schedule->id);
-    //     })->update(['status' => 'Eliminado']);
-    // }
-
     public function getFormActions(): array
     {
         return [
             $this->getSaveFormAction(),
+
 
             DeleteAction::make()
                 ->label('Eliminar Horário')
@@ -85,6 +78,7 @@ class EditSchedules extends EditRecord
                 ->requiresConfirmation()
                 ->action(function () {
 
+                    $this->validateScheduleWindow();
 
                     SchedulesResource::rollbackScheduleRequest($this->record);
 
@@ -92,7 +86,6 @@ class EditSchedules extends EditRecord
 
                         SchedulesResource::hoursCounterUpdate($this->record, true);
                     }
-
 
                     $this->record->delete();
 

@@ -43,7 +43,7 @@ trait HandlesScheduleSwap
         $scheduleRequest->loadMissing('requester.user', 'scheduleConflict.teacher.user');
         $schedule->loadMissing('weekday', 'timeperiod', 'room');
 
-       // dd($schedule->toArray());
+        // dd($schedule->toArray());
 
         //$scheduleRequest->loadMissing('requester.user', 'scheduleConflict.teacher.user');
 
@@ -52,6 +52,8 @@ trait HandlesScheduleSwap
         $currentRoom = $schedule?->room?->name ?? 'desconhecida';
         $dayName = $schedule?->weekday?->weekday ?? 'desconhecido';
         $timePeriod = $schedule->timeperiod?->description ?? 'desconhecido';
+        $requestername = $requester?->name ?? 'um professor';
+
 
 
         Notification::make()
@@ -62,8 +64,8 @@ trait HandlesScheduleSwap
             ->send();
 
         Notification::make()
-            ->title("Pedido de Troca")
-            ->body("{$requester?->name} solicitou a troca da sala {$currentRoom}, na {$dayName}, entre {$timePeriod}.")
+            ->title("Novo pedido de troca recebido")
+            ->body("O(a) professor(a) {$requestername} solicitou trocar a sala {$currentRoom}, marcada para {$dayName} entre {$timePeriod}.")
             ->success()
             ->sendToDatabase($owner);
 

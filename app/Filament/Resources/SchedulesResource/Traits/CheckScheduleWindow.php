@@ -24,7 +24,7 @@ trait CheckScheduleWindow
         ) {
             Notification::make()
                 ->title('Fora do período de marcação')
-                ->body('Só pode marcar horários entre ' .
+                ->body('Só pode efetuar alterações a horários entre ' .
                     Carbon::parse($anoLetivo->start_date)->format('d/m/Y') . ' e ' .
                     Carbon::parse($anoLetivo->end_date)->format('d/m/Y') . '.')
                 ->warning()

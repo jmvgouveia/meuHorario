@@ -3,7 +3,7 @@
 
 
 ->title("Novo pedido de troca recebido")
-->body("O professor {$requestername} solicitou trocar a aula na sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")
+->body("O professor {$requestername} solicitou trocar a sala {$currentRoom}, marcada para {$dayName} às {$timePeriod}.")
 
 
 🟢 Para o requerente:
