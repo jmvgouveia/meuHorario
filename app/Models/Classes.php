@@ -24,6 +24,9 @@ class Classes extends Model
     // }
 
 
+
+
+
     public function course()
     {
         return $this->belongsTo(Course::class, 'id_course'); // 'course_id' é a chave estrangeira na tabela de classes

@@ -162,7 +162,7 @@ class EditScheduleRequest extends EditRecord
                         $requestername = $this->record->requester?->name ?? 'desconhecido';
                         $salaAntiga = $schedule?->room?->name ?? 'desconhecida';
                         $requester = $this->record->requester?->user;
-                        $ownername = $owner?->name ?? 'desconhecido';
+                        $ownername = $this->record->scheduleConflict?->teacher?->name ?? 'desconhecido';
                         $owner = $this->record->scheduleConflict?->teacher?->user;
                         $dayName = $this->record->scheduleConflict?->weekday?->weekday ?? 'desconhecido';
                         $timePeriod = $this->record->scheduleConflict?->timeperiod?->description ?? 'desconhecido';

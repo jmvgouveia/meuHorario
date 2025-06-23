@@ -31,9 +31,6 @@ class EditSchedules extends EditRecord
     use ChecksScheduleConflicts;
     use HandlesScheduleSwap;
 
-
-
-
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Se quiseres mudar algo antes de salvar os campos do modelo, faz aqui.

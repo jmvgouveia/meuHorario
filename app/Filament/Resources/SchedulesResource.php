@@ -4,29 +4,20 @@ namespace App\Filament\Resources;
 
 
 use App\Filament\Resources\SchedulesResource\Pages;
-use App\Filament\Resources\SchedulesResource\RelationManagers;
+
 use App\Models\Building;
 use App\Models\Classes;
-use App\Models\Room;
+
 use App\Models\Schedules;
 use App\Models\Subject;
 use App\Models\TimePeriod;
 use App\Models\WeekDays;
 use App\Models\SchoolYears;
 use App\Models\Teacher;
-use App\Models\Registration;
-use App\Models\Student;
-use App\Models\TeacherHourCounter;
-use App\Models\TeacherSubject;
-use App\Models\TeacherCourse;
-use App\Models\Course;
+
 use App\Models\ScheduleRequest;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-use Dom\Text;
-use Faker\Core\Color;
-use Filament\Facades\Filament;
-use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Form;
@@ -34,40 +25,30 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Badge;
+
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\DB;
-use Filament\Forms\Components\ColorPicker;
+
 use Illuminate\Console\Scheduling\Schedule;
-use Filament\Forms\Components\Placeholder;
+
 use Filament\Forms\Components\Section;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\MultiSelect;
+
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Actions as ActionGroup;
 
-
-
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkAction;
 use Illuminate\Support\Collection;
-use Filament\Tables\Actions\BulkAction as TablesBulkAction;
+
 use Filament\Forms\Components\Toggle;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\Action as TablesAction;
-use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ExportAction;
-use Filament\Tables\Actions\DeleteAction as ActionsDeleteAction;
-use Filament\Tables\Actions\Action as ActionsAction;
+
 use Filament\Tables\Actions;
-use PhpOffice\PhpSpreadsheet\Calculation\Logical\Boolean;
-use PhpParser\Node\Expr\Cast\Bool_;
+
 
 class SchedulesResource extends Resource
 {

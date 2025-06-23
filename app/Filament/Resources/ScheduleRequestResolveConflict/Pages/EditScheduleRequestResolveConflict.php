@@ -75,7 +75,7 @@ class EditScheduleRequestResolveConflict extends EditRecord
 
 
 
-                    $salaAntiga = $schedule?->room?->name ?? 'desconhecida';
+                    $salaAntiga = $this->record->scheduleConflict?->room?->name ?? 'desconhecida';
                     $salaNova = \App\Models\Room::find($data['id_room_novo'])?->name ?? 'desconhecida';
                     $requester = $this->record->requester?->user;
                     $requestername = $this->record->requester?->name ?? 'desconhecido';
